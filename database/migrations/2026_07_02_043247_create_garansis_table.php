@@ -11,12 +11,12 @@ return new class extends Migration {
             $table->id();
             $table->string('nama');
             $table->string('no_hp');
-            $table->string('so_number')->nullable();
+            $table->string('invoice_pembelian')->nullable();
             $table->date('tanggal_beli');
             $table->string('nama_marketplace');
             $table->text('kerusakan');
             $table->text('kelengkapan_barang');
-            $table->enum('lokasi_chat', ['jakarta', 'makassar', 'surabaya']);
+            $table->string('lokasi_chat');
             $table->enum('status', [
                 'pending',
                 'repair',

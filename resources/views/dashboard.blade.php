@@ -3,14 +3,6 @@
 
 @section('content')
 <div class="space-y-6">
-
-    <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <a href="{{ route('garansi.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <i class="fas fa-plus"></i> Buat Data Garansi
-        </a>
-    </div>
-
     {{-- Stats Cards --}}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
@@ -62,11 +54,23 @@
                         <th class="text-left px-6 py-3 font-medium">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y divide-gray-200">
                     @forelse($recentGaransis as $garansi)
-                    <tr class="hover:bg-gray-50">
+                    @php
+                        // Hitung selisih hari dari terakhir di-update
+                        $idleDays = now()->diffInDays($garansi->updated_at);
+                        $rowClass = '';
+                        if ($garansi->status !== 'selesai') {
+                            if ($idleDays >= 2) {
+                                $rowClass = 'bg-red-50'; // Merah jika >= 2 hari
+                            } elseif ($idleDays >= 1) {
+                                $rowClass = 'bg-yellow-50'; // Kuning jika 1 hari
+                            }
+                        }
+                    @endphp
+                    <tr class="hover:bg-gray-50 {{ $rowClass }}">
                         <td class="px-6 py-3 font-medium text-gray-900">{{ $garansi->nama }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $garansi->so_number ?? '-' }}</td>
+                        <td class="px-6 py-3 text-gray-600">{{ $garansi->invoice_pembelian ?? '-' }}</td>
                         <td class="px-6 py-3 text-gray-600">{{ $garansi->no_hp }}</td>
                         <td class="px-6 py-3">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">

@@ -30,11 +30,11 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">SO Number</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Pembelian</label>
             <div class="flex gap-2">
-                <input type="text" name="so_number" id="so_number" value="{{ old('so_number', $garansi->so_number) }}"
+                <input type="text" name="invoice_pembelian" id="invoice_pembelian" value="{{ old('invoice_pembelian', $garansi->invoice_pembelian) }}"
                     class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                <button type="button" id="btn-scrape-so"
+                <button type="button" id="btn-scrape-invoice"
                     class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-magnifying-glass"></i> Scrape
                 </button>
@@ -158,10 +158,10 @@
     addItem('{{ addslashes($oldItem['nama_barang'] ?? '') }}', '{{ addslashes($oldItem['serial_number'] ?? '') }}', {{ $oldItem['id'] ?? 'null' }});
     @endforeach
 
-    // SO Scrape (same as create)
-    document.getElementById('btn-scrape-so')?.addEventListener('click', function() {
-        const soNumber = document.getElementById('so_number').value.trim();
-        if (!soNumber) { alert('Masukkan SO Number terlebih dahulu.'); return; }
+    // Invoice Scrape (same as create)
+    document.getElementById('btn-scrape-invoice')?.addEventListener('click', function() {
+        const invoiceNumber = document.getElementById('invoice_pembelian').value.trim();
+        if (!invoiceNumber) { alert('Masukkan Invoice Pembelian terlebih dahulu.'); return; }
         const btn = this;
         const resultEl = document.getElementById('scrape-result');
         btn.disabled = true;
@@ -169,10 +169,10 @@
         resultEl.classList.remove('hidden');
         resultEl.className = 'text-xs mt-1 text-gray-500';
         resultEl.textContent = 'Sedang scraping...';
-        fetch('{{ route("garansi.scrape-so") }}', {
+        fetch('{{ route("garansi.scrape-invoice") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-            body: JSON.stringify({ so_number: soNumber })
+            body: JSON.stringify({ invoice_pembelian: invoiceNumber })
         })
         .then(r => r.json())
         .then(data => {

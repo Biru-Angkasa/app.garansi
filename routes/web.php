@@ -21,6 +21,6 @@ Route::prefix('garansi')->name('garansi.')->group(function () {
     // Kirim WA manual
     Route::post('/{garansi}/send-wa', [GaransiController::class, 'sendWA'])->name('send-wa');
 
-    // Scraping SO (placeholder - logic nanti)
-    Route::post('/scrape-so', [GaransiController::class, 'scrapeSO'])->name('scrape-so');
+    // Scraping Invoice Pembelian (placeholder - logic nanti)
+    Route::post('/scrape-invoice', [GaransiController::class, 'scrapeInvoice'])->name('scrape-invoice');
 });

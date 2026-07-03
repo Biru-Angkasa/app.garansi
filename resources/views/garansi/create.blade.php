@@ -30,20 +30,20 @@
             </div>
         </div>
 
-        {{-- SO Number (dengan tombol scraping) --}}
+        {{-- Invoice Pembelian (dengan tombol scraping) --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">SO Number</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Pembelian</label>
             <div class="flex gap-2">
-                <input type="text" name="so_number" id="so_number" value="{{ old('so_number') }}"
-                    placeholder="Masukkan SO Number..."
+                <input type="text" name="invoice_pembelian" id="invoice_pembelian" value="{{ old('invoice_pembelian') }}"
+                    placeholder="Masukkan Invoice Pembelian..."
                     class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                <button type="button" id="btn-scrape-so"
+                <button type="button" id="btn-scrape-invoice"
                     class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap"
-                    title="Scrape data SO dari marketplace">
+                    title="Scrape data Invoice dari marketplace">
                     <i class="fas fa-magnifying-glass"></i> Scrape
                 </button>
             </div>
-            @error('so_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('invoice_pembelian') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             <p id="scrape-result" class="text-xs mt-1 hidden"></p>
         </div>
 
@@ -74,13 +74,13 @@
                     placeholder="Shopee / Tokopedia / TikTok Shop / dll"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                 <datalist id="marketplace-list">
-                    <option value="Shopee">
-                    <option value="Tokopedia">
-                    <option value="TikTok Shop">
-                    <option value="Bukalapak">
-                    <option value="Lazada">
-                    <option value="Blibli">
-                    <option value="Website / Official Store">
+                    <option value="EDCCOMP">
+                    <option value="FIBRA">
+                    <option value="MOBITRA">
+                    <option value="CENTRAL">
+                    <option value="KABELOS">
+                    <option value="MIKROFI">
+                    <option value="TARMOC">
                     <option value="Lainnya">
                 </datalist>
                 @error('nama_marketplace') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -192,11 +192,11 @@
         addItem();
     @endif
 
-    // ========== SO Scraping (placeholder) ==========
-    document.getElementById('btn-scrape-so').addEventListener('click', function() {
-        const soNumber = document.getElementById('so_number').value.trim();
-        if (!soNumber) {
-            alert('Masukkan SO Number terlebih dahulu.');
+    // ========== Invoice Scraping (placeholder) ==========
+    document.getElementById('btn-scrape-invoice').addEventListener('click', function() {
+        const invoiceNumber = document.getElementById('invoice_pembelian').value.trim();
+        if (!invoiceNumber) {
+            alert('Masukkan Invoice Pembelian terlebih dahulu.');
             return;
         }
 
@@ -207,17 +207,17 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
         resultEl.className = 'text-xs mt-1 text-gray-500';
-        resultEl.textContent = 'Sedang scraping data SO...';
+        resultEl.textContent = 'Sedang scraping data Invoice...';
         resultEl.classList.remove('hidden');
 
-        fetch('{{ route("garansi.scrape-so") }}', {
+        fetch('{{ route("garansi.scrape-invoice") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ so_number: soNumber })
+            body: JSON.stringify({ invoice_pembelian: invoiceNumber })
         })
         .then(res => res.json())
         .then(data => {

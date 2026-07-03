@@ -6,6 +6,7 @@ use App\Models\Garansi;
 use App\Models\GaransiItem;
 use App\Services\WhatsappService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class GaransiController extends Controller
 {
@@ -21,7 +22,7 @@ class GaransiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('so_number', 'like', "%{$search}%")
+                  ->orWhere('invoice_pembelian', 'like', "%{$search}%")
                   ->orWhere('no_hp', 'like', "%{$search}%");
             });
         }
@@ -52,12 +53,12 @@ class GaransiController extends Controller
         $validated = $request->validate([
             'nama'               => ['required', 'string', 'max:255'],
             'no_hp'              => ['required', 'string', 'max:20'],
-            'so_number'          => ['nullable', 'string', 'max:255'],
+            'invoice_pembelian' => ['nullable', 'string', 'max:255'],
             'tanggal_beli'       => ['required', 'date'],
             'nama_marketplace'   => ['required', 'string', 'max:255'],
             'kerusakan'          => ['required', 'string'],
             'kelengkapan_barang' => ['required', 'string'],
-            'lokasi_chat'        => ['required', 'in:jakarta,makassar,surabaya'],
+            'lokasi_chat' => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
             'items'              => ['required', 'array', 'min:1'],
             'items.*.nama_barang'   => ['required', 'string', 'max:255'],
             'items.*.serial_number' => ['required', 'string', 'max:255'],
@@ -66,7 +67,7 @@ class GaransiController extends Controller
         $garansi = Garansi::create([
             'nama'               => $validated['nama'],
             'no_hp'              => $validated['no_hp'],
-            'so_number'          => $validated['so_number'] ?? null,
+            'invoice_pembelian' => $validated['invoice_pembelian'] ?? null,
             'tanggal_beli'       => $validated['tanggal_beli'],
             'nama_marketplace'   => $validated['nama_marketplace'],
             'kerusakan'          => $validated['kerusakan'],
@@ -124,12 +125,12 @@ class GaransiController extends Controller
         $validated = $request->validate([
             'nama'               => ['required', 'string', 'max:255'],
             'no_hp'              => ['required', 'string', 'max:20'],
-            'so_number'          => ['nullable', 'string', 'max:255'],
+            'invoice_pembelian'          => ['nullable', 'string', 'max:255'],
             'tanggal_beli'       => ['required', 'date'],
             'nama_marketplace'   => ['required', 'string', 'max:255'],
             'kerusakan'          => ['required', 'string'],
             'kelengkapan_barang' => ['required', 'string'],
-            'lokasi_chat'        => ['required', 'in:jakarta,makassar,surabaya'],
+            'lokasi_chat' => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
             'items'              => ['required', 'array', 'min:1'],
             'items.*.id'            => ['nullable', 'exists:garansi_items,id'],
             'items.*.nama_barang'   => ['required', 'string', 'max:255'],
@@ -139,7 +140,7 @@ class GaransiController extends Controller
         $garansi->update([
             'nama'               => $validated['nama'],
             'no_hp'              => $validated['no_hp'],
-            'so_number'          => $validated['so_number'] ?? null,
+            'invoice_pembelian'  => $validated['invoice_pembelian'] ?? null,
             'tanggal_beli'       => $validated['tanggal_beli'],
             'nama_marketplace'   => $validated['nama_marketplace'],
             'kerusakan'          => $validated['kerusakan'],
@@ -229,21 +230,21 @@ class GaransiController extends Controller
     }
 
     /**
-     * Scraping SO Number (placeholder — logic scraping dibuat nanti)
+     * Scraping Invoice Pembelian (placeholder — logic scraping dibuat nanti)
      */
-    public function scrapeSO(Request $request)
+    public function scrapeInvoice(Request $request)
     {
         $request->validate([
-            'so_number' => ['required', 'string'],
+            'invoice_pembelian' => ['required', 'string'],
         ]);
 
-        // TODO: Implementasi logic scraping SO number
-        // Contoh: scrape data dari marketplace berdasarkan SO number
+        // TODO: Implementasi logic scraping Invoice Pembelian
+        // Contoh: scrape data dari marketplace berdasarkan Invoice Pembelian
 
         return response()->json([
             'success' => false,
             'message' => 'Logic scraping belum diimplementassi. Akan dibuat nanti.',
-            'so_number' => $request->so_number,
+            'invoice_pembelian' => $request->invoice_pembelian,
         ]);
     }
 }

@@ -2,20 +2,16 @@
 @section('title', 'Data Garansi')
 
 @section('content')
-<div class="space-y-6">
-
-    <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Data Garansi</h1>
-        <a href="{{ route('garansi.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <i class="fas fa-plus"></i> Buat Garansi Baru
-        </a>
+        <div class="flex items-center gap-4 text-xs text-gray-500">
+        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded"></span> Diam 1 hari</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-50 border border-red-200 rounded"></span> Diam >= 2 hari</span>
     </div>
 
     {{-- Filter --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <form method="GET" class="flex flex-wrap gap-3 items-end">
             <div class="flex-1 min-w-[200px]">
-                <label class="block text-xs text-gray-500 mb-1">Cari (Nama / SO / No HP)</label>
+                <label class="block text-xs text-gray-500 mb-1">Cari (Nama / Invoice Pembelian / No HP)</label>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..."
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
             </div>
@@ -46,7 +42,7 @@
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
                         <th class="text-left px-4 py-3 font-medium">Nama</th>
-                        <th class="text-left px-4 py-3 font-medium">SO</th>
+                        <th class="text-left px-4 py-3 font-medium">Invoice Pembelian</th>
                         <th class="text-left px-4 py-3 font-medium">No HP</th>
                         <th class="text-left px-4 py-3 font-medium">Barang</th>
                         <th class="text-left px-4 py-3 font-medium">Lokasi Chat</th>
@@ -57,9 +53,20 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($garansis as $garansi)
-                    <tr class="hover:bg-gray-50">
+                    @php
+                        $idleDays = now()->diffInDays($garansi->updated_at);
+                        $rowClass = '';
+                        if ($garansi->status !== 'selesai') {
+                            if ($idleDays >= 2) {
+                                $rowClass = 'bg-red-50';
+                            } elseif ($idleDays >= 1) {
+                                $rowClass = 'bg-yellow-50';
+                            }
+                        }
+                    @endphp
+                    <tr class="hover:bg-gray-50 {{ $rowClass }}">
                         <td class="px-4 py-3 font-medium text-gray-900">{{ $garansi->nama }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $garansi->so_number ?? '-' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $garansi->invoice_pembelian ?? '-' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $garansi->no_hp }}</td>
                         <td class="px-4 py-3 text-gray-600">
                             @if($garansi->items->count() > 1)

@@ -63,8 +63,8 @@
                     <dd class="font-medium text-gray-900">{{ $garansi->no_hp }}</dd>
                 </div>
                 <div>
-                    <dt class="text-gray-400">SO Number</dt>
-                    <dd class="font-medium text-gray-900">{{ $garansi->so_number ?? '-' }}</dd>
+                    <dt class="text-gray-400">Invoice Pembelian</dt>
+                    <dd class="font-medium text-gray-900">{{ $garansi->invoice_pembelian ?? '-' }}</dd>
                 </div>
                 <div>
                     <dt class="text-gray-400">Marketplace</dt>

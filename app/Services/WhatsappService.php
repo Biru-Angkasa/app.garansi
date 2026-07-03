@@ -124,9 +124,9 @@ class WhatsappService
             return "- {$item->nama_barang} (SN: {$item->serial_number})";
         })->implode("\n");
 
-        $pesan = "Halo *{$garansi->nama}*,\n\n";
+        $pesan = "Halo *{$garansi->nama}*,\n";
         $pesan .= "Data garansi Anda telah dibuat dengan detail berikut:\n\n";
-        $pesan .= "📄 SO Number: *{$garansi->so_number}*\n";
+        $pesan .= "📄 Invoice Pembelian: *{$garansi->invoice_pembelian}*\n";
         $pesan .= "📦 Barang:\n{$items}\n\n";
         $pesan .= "🛒 Marketplace: {$garansi->nama_marketplace}\n";
         $pesan .= "📅 Tanggal Beli: {$garansi->tanggal_beli->format('d/m/Y')}\n";
@@ -134,8 +134,7 @@ class WhatsappService
         $pesan .= "🔄 Status: *{$garansi->status}*\n";
         $tanggalSampai = $garansi->tanggal_sampai ? $garansi->tanggal_sampai->format('d/m/Y H:i') : now()->format('d/m/Y H:i');
         $pesan .= "⏰ Tanggal Sampai: {$tanggalSampai}\n\n";
-        
-        $pesan .= "Kami akan memberi tahu Anda jika ada pembaruan status.\n\n";
+        $pesan .= "Kami akan memberi tahu Anda jika ada pembaruan status.\n";
         $pesan .= "Terima kasih 🙏";
 
         return $this->send(
@@ -152,14 +151,36 @@ class WhatsappService
      */
     public function sendStatusNotification(Garansi $garansi): array
     {
+        // Ambil nama lokasi dari config
+        $lokasiNama = config("whatsapp.lokasi.{$garansi->lokasi_chat}.nama") ?? ucfirst($garansi->lokasi_chat);
+        
         $pesan = "Halo *{$garansi->nama}*,\n\n";
         $pesan .= "Status garansi Anda telah diperbarui:\n\n";
-        $pesan .= "📄 SO Number: *{$garansi->so_number}*\n";
-        $pesan .= "🔄 Status: *{$garansi->status}*\n";
+        $pesan .= "📄 Invoice Pembelian: *{$garansi->invoice_pembelian}*\n";
+        $pesan .= "📍 Lokasi CS: {$lokasiNama}\n";
+        $pesan .= "🔄 Status Terbaru: *" . strtoupper($garansi->status) . "*\n\n";
 
-        if ($garansi->status === 'selesai') {
-            $pesan .= "\n✅ Garansi Anda telah *SELESAI*.\n";
-            $pesan .= "Silakan hubungi kami untuk informasi pengambilan/pengiriman barang.\n";
+        // Keterangan dinamis berdasarkan status
+        switch ($garansi->status) {
+            case 'repair':
+                $pesan .= "🔧 Barang Anda sedang dalam proses *Perbaikan (Repair)*.\n";
+                break;
+            case 'replace':
+                $pesan .= "📦 Barang Anda sedang dalam proses *Penggantian (Replace)*.\n";
+                break;
+            case 'to distribution':
+                $pesan .= "🏭 Barang sedang dalam proses *Distribusi*.\n";
+                break;
+            case 'pengiriman':
+                $pesan .= "🚚 Barang Anda sedang dalam proses *Pengiriman*.\n";
+                break;
+            case 'selesai':
+                $pesan .= "✅ Garansi Anda telah *SELESAI*.\n";
+                $pesan .= "Silakan hubungi kami untuk informasi pengambilan/pengiriman barang.\n";
+                break;
+            default:
+                $pesan .= "⏳ Barang Anda sedang antrian untuk diproses.\n";
+                break;
         }
 
         if ($garansi->catatan) {

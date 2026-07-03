@@ -12,7 +12,7 @@ class Garansi extends Model
     protected $fillable = [
         'nama',
         'no_hp',
-        'so_number',
+        'invoice_pembelian',
         'tanggal_beli',
         'nama_marketplace',
         'kerusakan',
