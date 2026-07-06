@@ -70,7 +70,7 @@ class WhatsappService
 
         try {
             $http = Http::timeout(15);
-            
+
             if (!empty($apiKey)) {
                 $http = $http->withHeaders([
                     'X-Api-Key' => $apiKey,
@@ -116,26 +116,72 @@ class WhatsappService
     }
 
     /**
+     * Label & ikon status yang konsisten dipakai di semua template pesan.
+     * Key HARUS sama persis dengan value kolom `status` di database.
+     */
+    protected function statusMeta(string $status): array
+    {
+        return match ($status) {
+            'repair' => [
+                'label' => 'Perbaikan (Repair)',
+                'icon'  => '🔧',
+                'desc'  => 'Barang Anda sedang dalam proses perbaikan oleh tim teknisi kami.',
+            ],
+            'replace' => [
+                'label' => 'Penggantian (Replace)',
+                'icon'  => '📦',
+                'desc'  => 'Barang Anda sedang diproses untuk penggantian unit baru.',
+            ],
+            'to distribution' => [
+                'label' => 'Distribusi',
+                'icon'  => '🏭',
+                'desc'  => 'Barang Anda sedang dalam proses distribusi ke lokasi tujuan.',
+            ],
+            'pengiriman' => [
+                'label' => 'Pengiriman',
+                'icon'  => '🚚',
+                'desc'  => 'Barang Anda sedang dalam perjalanan pengiriman.',
+            ],
+            'selesai' => [
+                'label' => 'Selesai',
+                'icon'  => '✅',
+                'desc'  => "Garansi Anda telah *selesai diproses*.\nSilakan hubungi kami untuk informasi pengambilan atau pengiriman barang.",
+            ],
+            default => [
+                'label' => 'Pending',
+                'icon'  => '⏳',
+                'desc'  => 'Barang Anda sedang dalam antrian untuk diproses.',
+            ],
+        };
+    }
+
+    /**
      * Pesan otomatis saat data baru dibuat
      */
-        public function sendCreateNotification(Garansi $garansi): array
+    public function sendCreateNotification(Garansi $garansi): array
     {
-        $items = $garansi->items->map(function ($item) {
-            return "- {$item->nama_barang} (SN: {$item->serial_number})";
-        })->implode("\n");
+        $items = $garansi->items->map(
+            fn ($item) => "• {$item->nama_barang} — SN: {$item->serial_number}"
+        )->implode("\n");
 
-        $pesan = "Halo *{$garansi->nama}*,\n";
-        $pesan .= "Data garansi Anda telah dibuat dengan detail berikut:\n\n";
-        $pesan .= "📄 Invoice Pembelian: *{$garansi->invoice_pembelian}*\n";
-        $pesan .= "📦 Barang:\n{$items}\n\n";
-        $pesan .= "🛒 Marketplace: {$garansi->nama_marketplace}\n";
-        $pesan .= "📅 Tanggal Beli: {$garansi->tanggal_beli->format('d/m/Y')}\n";
-        $pesan .= "📍 Lokasi CS: " . ucfirst($garansi->lokasi_chat) . "\n";
-        $pesan .= "🔄 Status: *{$garansi->status}*\n";
-        $tanggalSampai = $garansi->tanggal_sampai ? $garansi->tanggal_sampai->format('d/m/Y H:i') : now()->format('d/m/Y H:i');
-        $pesan .= "⏰ Tanggal Sampai: {$tanggalSampai}\n\n";
-        $pesan .= "Kami akan memberi tahu Anda jika ada pembaruan status.\n";
-        $pesan .= "Terima kasih 🙏";
+        $meta = $this->statusMeta($garansi->status);
+        $tanggalSampai = $garansi->tanggal_sampai
+            ? $garansi->tanggal_sampai->format('d/m/Y H:i')
+            : now()->format('d/m/Y H:i');
+
+        $pesan  = "Halo *{$garansi->nama}* 👋\n";
+        $pesan .= "Data garansi Anda sudah kami terima. Berikut ringkasannya:\n";
+        $pesan .= "――――――――――――――――\n";
+        $pesan .= "📄 *No. Invoice:* {$garansi->invoice_pembelian}\n";
+        $pesan .= "📦 *Barang:*\n{$items}\n";
+        $pesan .= "🛒 *Marketplace:* {$garansi->nama_marketplace}\n";
+        $pesan .= "📅 *Tanggal Beli:* {$garansi->tanggal_beli->format('d/m/Y')}\n";
+        $pesan .= "📍 *Lokasi CS:* " . ucfirst($garansi->lokasi_chat) . "\n";
+        $pesan .= "⏰ *Tanggal Diterima:* {$tanggalSampai}\n";
+        $pesan .= "{$meta['icon']} *Status:* {$meta['label']}\n";
+        $pesan .= "――――――――――――――――\n\n";
+        $pesan .= "Kami akan mengabari Anda lewat WhatsApp ini setiap kali ada perkembangan status.\n\n";
+        $pesan .= "Terima kasih telah mempercayakan garansi Anda kepada kami 🙏";
 
         return $this->send(
             $garansi->no_hp,
@@ -151,40 +197,20 @@ class WhatsappService
      */
     public function sendStatusNotification(Garansi $garansi): array
     {
-        // Ambil nama lokasi dari config
         $lokasiNama = config("whatsapp.lokasi.{$garansi->lokasi_chat}.nama") ?? ucfirst($garansi->lokasi_chat);
-        
-        $pesan = "Halo *{$garansi->nama}*,\n\n";
-        $pesan .= "Status garansi Anda telah diperbarui:\n\n";
-        $pesan .= "📄 Invoice Pembelian: *{$garansi->invoice_pembelian}*\n";
-        $pesan .= "📍 Lokasi CS: {$lokasiNama}\n";
-        $pesan .= "🔄 Status Terbaru: *" . strtoupper($garansi->status) . "*\n\n";
+        $meta = $this->statusMeta($garansi->status);
 
-        // Keterangan dinamis berdasarkan status
-        switch ($garansi->status) {
-            case 'repair':
-                $pesan .= "🔧 Barang Anda sedang dalam proses *Perbaikan (Repair)*.\n";
-                break;
-            case 'replace':
-                $pesan .= "📦 Barang Anda sedang dalam proses *Penggantian (Replace)*.\n";
-                break;
-            case 'to distribution':
-                $pesan .= "🏭 Barang sedang dalam proses *Distribusi*.\n";
-                break;
-            case 'pengiriman':
-                $pesan .= "🚚 Barang Anda sedang dalam proses *Pengiriman*.\n";
-                break;
-            case 'selesai':
-                $pesan .= "✅ Garansi Anda telah *SELESAI*.\n";
-                $pesan .= "Silakan hubungi kami untuk informasi pengambilan/pengiriman barang.\n";
-                break;
-            default:
-                $pesan .= "⏳ Barang Anda sedang antrian untuk diproses.\n";
-                break;
-        }
+        $pesan  = "Halo *{$garansi->nama}* 👋\n";
+        $pesan .= "Ada pembaruan untuk status garansi Anda:\n";
+        $pesan .= "――――――――――――――――\n";
+        $pesan .= "📄 *No. Invoice:* {$garansi->invoice_pembelian}\n";
+        $pesan .= "📍 *Lokasi CS:* {$lokasiNama}\n";
+        $pesan .= "{$meta['icon']} *Status Terbaru:* {$meta['label']}\n";
+        $pesan .= "――――――――――――――――\n\n";
+        $pesan .= "{$meta['desc']}\n";
 
         if ($garansi->catatan) {
-            $pesan .= "\n📝 Catatan: {$garansi->catatan}\n";
+            $pesan .= "\n📝 *Catatan dari kami:*\n{$garansi->catatan}\n";
         }
 
         $pesan .= "\nTerima kasih 🙏";
