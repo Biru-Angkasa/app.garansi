@@ -10,9 +10,9 @@ use Illuminate\Validation\Rule;
 
 class GaransiController extends Controller
 {
-    public function index(Request $request)
+   public function index(Request $request)
     {
-        $query = Garansi::with('items')->latest();
+        $query = Garansi::with('items');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -26,6 +26,12 @@ class GaransiController extends Controller
                   ->orWhere('no_hp', 'like', "%{$search}%");
             });
         }
+
+        // TAMBAHKAN URUTAN DI SINI:
+        // 1. Status 'selesai' taruh paling bawah (1), selain itu di atas (0)
+        // 2. Urutkan berdasarkan updated_at terlama (asc), sehingga yang merah (paling lama diam) naik ke atas
+        $query->orderByRaw("CASE WHEN status = 'selesai' THEN 1 ELSE 0 END")
+              ->orderBy('updated_at', 'asc');
 
         $garansis = $query->paginate(10)->withQueryString();
 

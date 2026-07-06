@@ -54,21 +54,21 @@
                         <th class="text-left px-6 py-3 font-medium">Aksi</th>
                     </tr>
                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+              <tbody class="divide-y divide-gray-200">
                     @forelse($recentGaransis as $garansi)
                     @php
-                        // Hitung selisih hari dari terakhir di-update
                         $idleDays = now()->diffInDays($garansi->updated_at);
-                        $rowClass = '';
+                        
+                        $rowClass = 'hover:bg-gray-50'; // Default class
                         if ($garansi->status !== 'selesai') {
                             if ($idleDays >= 2) {
-                                $rowClass = 'bg-red-50'; // Merah jika >= 2 hari
+                                $rowClass = 'bg-red-200 hover:bg-red-300';
                             } elseif ($idleDays >= 1) {
-                                $rowClass = 'bg-yellow-50'; // Kuning jika 1 hari
+                                $rowClass = 'bg-amber-100 hover:bg-amber-200';
                             }
                         }
                     @endphp
-                    <tr class="hover:bg-gray-50 {{ $rowClass }}">
+                    <tr class="{{ $rowClass }} transition-colors duration-150">
                         <td class="px-6 py-3 font-medium text-gray-900">{{ $garansi->nama }}</td>
                         <td class="px-6 py-3 text-gray-600">{{ $garansi->invoice_pembelian ?? '-' }}</td>
                         <td class="px-6 py-3 text-gray-600">{{ $garansi->no_hp }}</td>
