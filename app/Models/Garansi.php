@@ -4,29 +4,33 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Garansi extends Model
 {
+    use LogsActivity; // <-- TAMBAHKAN INI
+
     protected $table = 'garansis';
 
     protected $fillable = [
-        'nama',
-        'no_hp',
-        'invoice_pembelian',
-        'tanggal_beli',
-        'nama_marketplace',
-        'kerusakan',
-        'kelengkapan_barang',
-        'lokasi_chat',
-        'status',
-        'catatan',
-        'tanggal_sampai',
+        'nama', 'no_hp', 'invoice_pembelian', 'tanggal_beli', 'nama_marketplace',
+        'kerusakan', 'kelengkapan_barang', 'lokasi_chat', 'status', 'catatan', 'tanggal_sampai',
     ];
 
     protected $casts = [
         'tanggal_beli'   => 'date',
         'tanggal_sampai' => 'datetime',
     ];
+
+    // Konfigurasi Audit Log
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nama', 'status', 'kerusakan', 'catatan', 'lokasi_chat'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) => "Data garansi telah di-{$eventName}");
+    }
 
     public function items(): HasMany
     {
@@ -38,13 +42,11 @@ class Garansi extends Model
         return $this->hasMany(WhatsappLog::class);
     }
 
-    // Helper untuk label status
     public function getStatusLabelAttribute(): string
     {
         return ucfirst($this->status);
     }
 
-    // Helper untuk warna badge status
     public function getStatusColorAttribute(): string
     {
         return match ($this->status) {

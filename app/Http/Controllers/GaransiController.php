@@ -104,8 +104,9 @@ class GaransiController extends Controller
 
     public function show(Garansi $garansi)
     {
-        $garansi->load(['items', 'whatsappLogs']);
-
+        $garansi->load(['items', 'whatsappLogs' => function ($query) {
+            $query->latest(); // Urutkan dari yang paling baru
+        }]);
         $statusList = [
             'pending',
             'repair',
@@ -252,5 +253,32 @@ class GaransiController extends Controller
             'message' => 'Logic scraping belum diimplementassi. Akan dibuat nanti.',
             'invoice_pembelian' => $request->invoice_pembelian,
         ]);
+    }
+
+        /**
+     * Kirim ulang pesan WhatsApp berdasarkan Log
+     */
+    public function resendWA(Request $request, Garansi $garansi, $logId)
+    {
+        try {
+            $log = \App\Models\WhatsappLog::findOrFail($logId);
+
+            $result = app(WhatsappService::class)->send(
+                $garansi->no_hp,
+                $log->pesan,
+                $garansi->lokasi_chat,
+                $garansi->id,
+                'resend'
+            );
+
+            return response()->json($result);
+            
+        } catch (\Exception $e) {
+            // Jika ada error, kembalikan sebagai JSON 500
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

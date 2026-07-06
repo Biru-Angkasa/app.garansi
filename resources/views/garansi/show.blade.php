@@ -158,7 +158,7 @@
 
         @if($garansi->whatsappLogs->isNotEmpty())
         <div class="space-y-2">
-            @foreach($garansi->whatsappLogs as $log)
+                      @forelse($garansi->whatsappLogs as $log)
             <div class="border border-gray-200 rounded-lg p-3 flex items-start gap-3">
                 <div class="flex-shrink-0">
                     @if($log->status_kirim === 'terkirim')
@@ -170,28 +170,31 @@
                     @endif
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                        <span class="font-medium text-gray-600">{{ strtoupper($log->tipe) }}</span>
-                        <span>•</span>
-                        <span>{{ ucfirst($log->lokasi) }}</span>
-                        <span>•</span>
-                        <span>{{ $log->created_at->format('d/m/Y H:i') }}</span>
-                        <span class="px-1.5 py-0.5 rounded-full text-xs
-                            {{ $log->status_kirim === 'terkirim' ? 'bg-green-100 text-green-700' : '' }}
-                            {{ $log->status_kirim === 'gagal' ? 'bg-red-100 text-red-700' : '' }}
-                            {{ $log->status_kirim === 'pending' ? 'bg-gray-100 text-gray-700' : '' }}">
-                            {{ ucfirst($log->status_kirim) }}
-                        </span>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <span class="font-medium text-gray-600">{{ strtoupper($log->tipe) }}</span>
+                            <span>•</span>
+                            <span>{{ ucfirst($log->lokasi) }}</span>
+                            <span>•</span>
+                            <span>{{ $log->created_at->format('d/m/Y H:i') }}</span>
+                            <span class="px-1.5 py-0.5 rounded-full text-xs
+                                {{ $log->status_kirim === 'terkirim' ? 'bg-green-100 text-green-700' : '' }}
+                                {{ $log->status_kirim === 'gagal' ? 'bg-red-100 text-red-700' : '' }}
+                                {{ $log->status_kirim === 'pending' ? 'bg-gray-100 text-gray-700' : '' }}">
+                                {{ ucfirst($log->status_kirim) }}
+                            </span>
+                        </div>
+                        {{-- TOMBOL KIRIM ULANG --}}
+                        <button class="resend-wa-btn text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1" data-url="{{ route('garansi.resend-wa', [$garansi->id, $log->id]) }}">
+                            <i class="fas fa-rotate-right"></i> Kirim Ulang
+                        </button>
                     </div>
                     <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $log->pesan }}</p>
-                    @if($log->status_kirim === 'gagal' && $log->response_api)
-                        <div class="mt-2 bg-red-50 border border-red-200 rounded p-2 text-xs text-red-600 overflow-x-auto">
-                            <strong>WAHA Error:</strong> {{ $log->response_api }}
-                        </div>
-                    @endif
                 </div>
             </div>
-            @endforeach
+            @empty
+            <p class="text-sm text-gray-400 text-center py-4">Belum ada riwayat WhatsApp.</p>
+            @endforelse
         </div>
         @else
         <p class="text-sm text-gray-400 text-center py-4">Belum ada riwayat WhatsApp.</p>
@@ -202,6 +205,48 @@
 
 @push('scripts')
 <script>
+    // ========== Kirim Ulang WA ==========
+    document.querySelectorAll('.resend-wa-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    // Lempar pesan error dari server ke catch block
+                    throw new Error(data.message || 'Server Error (500)');
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Pesan berhasil dikirim ulang!');
+                    location.reload(); 
+                } else {
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err.message))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            });
+        });
+    });
     // ========== Update Status ==========
     document.getElementById('btn-update-status').addEventListener('click', function() {
         const status = document.getElementById('status-select').value;
