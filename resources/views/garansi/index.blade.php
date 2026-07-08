@@ -71,74 +71,130 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($garansis as $garansi)
                     @php
-                        $idleDays = (int) $garansi->updated_at->startOfDay()->diffInDays(now()->startOfDay());
-                        $belumSelesai = strtolower($garansi->status) !== 'selesai';
+                        // Hitung berdasarkan tanggal (bukan 24 jam)
+                        $idleDays = $garansi->updated_at
+                            ->copy()
+                            ->startOfDay()
+                            ->diffInDays(now()->copy()->startOfDay());
 
-                        $accent = '';
+                        // Status selain selesai dianggap belum selesai
+                        $belumSelesai = strtolower(trim($garansi->status)) !== 'selesai';
+
+                        // Warna border & teks
+                        $borderClass = '';
                         $idleColor = 'text-slate-400';
-                        if ($belumSelesai && $idleDays >= 2) {
-                            $accent = 'border-l-4 border-l-rose-400';
-                            $idleColor = 'text-rose-600 font-semibold';
-                        } elseif ($belumSelesai && $idleDays >= 1) {
-                            $accent = 'border-l-4 border-l-amber-400';
-                            $idleColor = 'text-amber-600 font-semibold';
+
+                        if ($belumSelesai) {
+                            if ($idleDays >= 2) {
+                                $borderClass = 'border-l-4 border-rose-500';
+                                $idleColor = 'text-rose-600 font-semibold';
+                            } elseif ($idleDays >= 1) {
+                                $borderClass = 'border-l-4 border-amber-500';
+                                $idleColor = 'text-amber-600 font-semibold';
+                            }
                         }
                     @endphp
-                    <tr class="hover:bg-slate-50 transition-colors {{ $accent }}">
-                        <td class="px-4 py-3 font-medium text-slate-900">{{ $garansi->nama }}</td>
-                        <td class="px-4 py-3 text-slate-500 font-mono text-xs">{{ $garansi->invoice_pembelian ?? '-' }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ $garansi->no_hp }}</td>
+
+                    <tr class="hover:bg-slate-50 transition-colors">
+
+                        <td class="px-4 py-3 font-medium text-slate-900 {{ $borderClass }}">
+                            {{ $garansi->nama }}
+                        </td>
+
+                        <td class="px-4 py-3 text-slate-500 font-mono text-xs">
+                            {{ $garansi->invoice_pembelian ?? '-' }}
+                        </td>
+
+                        <td class="px-4 py-3 text-slate-600">
+                            {{ $garansi->no_hp }}
+                        </td>
+
                         <td class="px-4 py-3 text-slate-600">
                             @if($garansi->items->count() > 1)
-                                <span class="text-xs">{{ $garansi->items->first()->nama_barang }} <span class="text-slate-400">+{{ $garansi->items->count() - 1 }}</span></span>
+                                <span class="text-xs">
+                                    {{ $garansi->items->first()->nama_barang }}
+                                    <span class="text-slate-400">
+                                        +{{ $garansi->items->count() - 1 }}
+                                    </span>
+                                </span>
                             @else
-                                <span class="text-xs">{{ $garansi->items->first()->nama_barang ?? '-' }}</span>
+                                <span class="text-xs">
+                                    {{ $garansi->items->first()->nama_barang ?? '-' }}
+                                </span>
                             @endif
                         </td>
+
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-100 text-slate-600">
                                 {{ ucfirst($garansi->lokasi_chat) }}
                             </span>
                         </td>
+
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $garansi->status_color }}">
                                 {{ ucfirst($garansi->status) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-slate-600 text-xs">{{ $garansi->tanggal_sampai->format('d/m/Y H:i') }}</td>
+
+                        <td class="px-4 py-3 text-slate-600 text-xs">
+                            {{ $garansi->tanggal_sampai->format('d/m/Y H:i') }}
+                        </td>
+
                         <td class="px-4 py-3 text-slate-600 text-xs">
                             {{ $garansi->updated_at->format('d/m/Y H:i') }}
+
                             <span class="block mt-0.5 text-[10px] {{ $idleColor }}">
                                 {{ $idleDays }} hari lalu
                             </span>
                         </td>
+
                         <td class="px-4 py-3">
                             <div class="flex justify-end gap-3">
-                                <a href="{{ route('garansi.show', $garansi) }}" class="text-slate-400 hover:text-blue-600 transition-colors" title="Detail">
+
+                                <a href="{{ route('garansi.show', $garansi) }}"
+                                    class="text-slate-400 hover:text-blue-600 transition-colors"
+                                    title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('garansi.edit', $garansi) }}" class="text-slate-400 hover:text-emerald-600 transition-colors" title="Edit">
+
+                                <a href="{{ route('garansi.edit', $garansi) }}"
+                                    class="text-slate-400 hover:text-emerald-600 transition-colors"
+                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+
                                 @if(auth()->user()->role === 'admin')
-                                <form action="{{ route('garansi.destroy', $garansi) }}" method="POST" onsubmit="event.preventDefault(); confirmDelete(this, 'Data garansi {{ addslashes($garansi->nama) }} akan dihapus permanen.')" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-slate-400 hover:text-rose-600 transition-colors" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                    <form action="{{ route('garansi.destroy', $garansi) }}"
+                                        method="POST"
+                                        class="inline"
+                                        onsubmit="event.preventDefault(); confirmDelete(this, 'Data garansi {{ addslashes($garansi->nama) }} akan dihapus permanen.')">
+
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button type="submit"
+                                            class="text-slate-400 hover:text-rose-600 transition-colors"
+                                            title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 @endif
+
                             </div>
                         </td>
+
                     </tr>
-                    @empty
+
+                @empty
+
                     <tr>
                         <td colspan="9" class="px-4 py-16 text-center text-slate-400">
                             <i class="fas fa-folder-open text-3xl mb-3 block"></i>
                             Tidak ada data ditemukan.
                         </td>
                     </tr>
-                    @endforelse
+
+                @endforelse
                 </tbody>
             </table>
         </div>

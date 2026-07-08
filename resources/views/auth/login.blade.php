@@ -33,7 +33,7 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me & Forgot -->
+        <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between">
             <label for="remember_me" class="inline-flex items-center cursor-pointer">
                 <input id="remember_me" type="checkbox" class="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500" name="remember">
@@ -50,5 +50,15 @@
         <x-primary-button class="w-full">
             <i class="fas fa-right-to-bracket text-xs"></i> {{ __('Masuk') }}
         </x-primary-button>
+
+        <!-- Link ke Register -->
+        @if (Route::has('register'))
+            <p class="text-center text-sm text-slate-500">
+                {{ __('Belum punya akun?') }}
+                <a class="font-medium text-blue-600 hover:text-blue-700 transition-colors" href="{{ route('register') }}">
+                    {{ __('Daftar di sini') }}
+                </a>
+            </p>
+        @endif
     </form>
 </x-guest-layout>

@@ -13,13 +13,13 @@
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             @php
                 $statCards = [
-                    ['label' => 'Total', 'value' => $stats['total'], 'icon' => 'fa-layer-group', 'color' => 'slate'],
-                    ['label' => 'Pending', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'color' => 'slate'],
-                    ['label' => 'Repair', 'value' => $stats['repair'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'blue'],
-                    ['label' => 'Replace', 'value' => $stats['replace'], 'icon' => 'fa-arrows-rotate', 'color' => 'violet'],
-                    ['label' => 'Distribusi', 'value' => $stats['distribusi'], 'icon' => 'fa-boxes-stacked', 'color' => 'amber'],
-                    ['label' => 'Pengiriman', 'value' => $stats['pengiriman'], 'icon' => 'fa-truck-fast', 'color' => 'sky'],
-                    ['label' => 'Selesai', 'value' => $stats['selesai'], 'icon' => 'fa-circle-check', 'color' => 'emerald'],
+                    ['label' => 'Total', 'value' => $stats['total'], 'icon' => 'fa-layer-group', 'color' => 'slate', 'status' => null],
+                    ['label' => 'Pending', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'color' => 'slate', 'status' => 'pending'],
+                    ['label' => 'Repair', 'value' => $stats['repair'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'blue', 'status' => 'repair'],
+                    ['label' => 'Replace', 'value' => $stats['replace'], 'icon' => 'fa-arrows-rotate', 'color' => 'violet', 'status' => 'replace'],
+                    ['label' => 'Distribusi', 'value' => $stats['distribusi'], 'icon' => 'fa-boxes-stacked', 'color' => 'amber', 'status' => 'to distribution'],
+                    ['label' => 'Pengiriman', 'value' => $stats['pengiriman'], 'icon' => 'fa-truck-fast', 'color' => 'sky', 'status' => 'pengiriman'],
+                    ['label' => 'Selesai', 'value' => $stats['selesai'], 'icon' => 'fa-circle-check', 'color' => 'emerald', 'status' => 'selesai'],
                 ];
                 $colorMap = [
                     'slate'   => ['bg' => 'bg-slate-100', 'text' => 'text-slate-500'],
@@ -31,7 +31,8 @@
                 ];
             @endphp
             @foreach($statCards as $card)
-            <div class="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3 hover:border-slate-300 transition-colors">
+            <a href="{{ route('garansi.index', $card['status'] ? ['status' => $card['status']] : []) }}"
+               class="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer">
                 <div class="w-10 h-10 rounded-xl {{ $colorMap[$card['color']]['bg'] }} {{ $colorMap[$card['color']]['text'] }} flex items-center justify-center shrink-0">
                     <i class="fas {{ $card['icon'] }} text-sm"></i>
                 </div>
@@ -39,10 +40,9 @@
                     <div class="text-xs text-slate-400 truncate">{{ $card['label'] }}</div>
                     <div class="text-2xl font-bold text-slate-900 tabular-nums leading-tight">{{ $card['value'] }}</div>
                 </div>
-            </div>
+            </a>
             @endforeach
         </div>
-
         {{-- SLA Banner --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 flex items-center justify-between">
