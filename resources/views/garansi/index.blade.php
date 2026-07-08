@@ -121,7 +121,7 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @if(auth()->user()->role === 'admin')
-                                <form action="{{ route('garansi.destroy', $garansi) }}" method="POST" onsubmit="return confirm('Hapus data ini?')" class="inline">
+                                <form action="{{ route('garansi.destroy', $garansi) }}" method="POST" onsubmit="event.preventDefault(); confirmDelete(this, 'Data garansi {{ addslashes($garansi->nama) }} akan dihapus permanen.')" class="inline">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-slate-400 hover:text-rose-600 transition-colors" title="Hapus">
                                         <i class="fas fa-trash"></i>
