@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Garansi;
+use App\Models\GaransiItem;
 use App\Models\WhatsappLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -221,6 +222,33 @@ class WhatsappService
             $garansi->lokasi_chat,
             $garansi->id,
             'status_update'
+        );   
+    }
+    /**
+     * Pesan otomatis saat SN barang diganti (replace)
+     */
+    public function sendReplaceNotification(Garansi $garansi, GaransiItem $item): array
+    {
+        $lokasiNama = config("whatsapp.lokasi.{$garansi->lokasi_chat}.nama") ?? ucfirst($garansi->lokasi_chat);
+
+        $pesan  = "Halo *{$garansi->nama}* 👋\n";
+        $pesan .= "Informasi penggantian barang untuk garansi Anda:\n";
+        $pesan .= "――――――――――――――――\n";
+        $pesan .= "📄 *No. Invoice:* {$garansi->invoice_pembelian}\n";
+        $pesan .= "📍 *Lokasi CS:* {$lokasiNama}\n";
+        $pesan .= "📦 *Barang:* {$item->nama_barang}\n";
+        $pesan .= "🔁 *SN Lama:* {$item->serial_number}\n";
+        $pesan .= "🆕 *SN Baru:* {$item->serial_number_baru}\n";
+        $pesan .= "――――――――――――――――\n\n";
+        $pesan .= "Barang Anda telah diganti dengan unit baru menggunakan Serial Number di atas. Mohon disimpan untuk keperluan garansi selanjutnya.\n\n";
+        $pesan .= "Terima kasih 🙏";
+
+        return $this->send(
+            $garansi->no_hp,
+            $pesan,
+            $garansi->lokasi_chat,
+            $garansi->id,
+            'replace_sn'
         );
     }
 }

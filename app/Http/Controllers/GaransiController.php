@@ -19,11 +19,15 @@ class GaransiController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('invoice_pembelian', 'like', "%{$search}%")
-                  ->orWhere('no_hp', 'like', "%{$search}%");
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+            ->orWhere('invoice_pembelian', 'like', "%{$search}%")
+            ->orWhere('no_hp', 'like', "%{$search}%")
+            ->orWhereHas('items', function ($iq) use ($search) {
+                $iq->where('serial_number', 'like', "%{$search}%")
+                    ->orWhere('serial_number_baru', 'like', "%{$search}%");
+                });
             });
         }
 
@@ -216,6 +220,36 @@ class GaransiController extends Controller
         ]);
     }
 
+    /**
+     * Simpan Serial Number baru untuk sebuah item (dipakai saat status = replace).
+     * SN lama tetap disimpan sebagai histori, tidak ditimpa.
+     */
+    public function replaceItemSerial(Request $request, Garansi $garansi, GaransiItem $item)
+    {
+        abort_unless($item->garansi_id === $garansi->id, 404);
+
+        $validated = $request->validate([
+            'serial_number_baru' => ['required', 'string', 'max:255'],
+        ]);
+
+        $item->update([
+            'serial_number_baru' => $validated['serial_number_baru'],
+            'replaced_at'        => now(),
+        ]);
+
+        try {
+            app(WhatsappService::class)->sendReplaceNotification($garansi, $item->fresh());
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal kirim WA replace SN: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SN baru berhasil disimpan. Notifikasi WhatsApp sedang dikirim.',
+            'item'    => $item->fresh(),
+        ]);
+    }
+    
     /**
      * Kirim WhatsApp manual
      */

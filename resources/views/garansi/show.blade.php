@@ -116,21 +116,39 @@
         <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <i class="fas fa-laptop text-blue-500"></i> Daftar Barang <span class="text-slate-400 font-normal">({{ $garansi->items->count() }})</span>
         </h3>
-        <div class="overflow-x-auto">
+         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-slate-400 text-xs uppercase tracking-wide">
                     <tr>
                         <th class="text-left px-4 py-2 font-medium">#</th>
                         <th class="text-left px-4 py-2 font-medium">Nama Barang</th>
-                        <th class="text-left px-4 py-2 font-medium">Serial Number</th>
+                        <th class="text-left px-4 py-2 font-medium">SN Lama</th>
+                        <th class="text-left px-4 py-2 font-medium">SN Baru (Replace)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @foreach($garansi->items as $index => $item)
-                    <tr>
+                    <tr data-item-row="{{ $item->id }}">
                         <td class="px-4 py-2.5 text-slate-400">{{ $index + 1 }}</td>
                         <td class="px-4 py-2.5 font-medium text-slate-900">{{ $item->nama_barang }}</td>
                         <td class="px-4 py-2.5 text-slate-600 font-mono text-xs">{{ $item->serial_number }}</td>
+                        <td class="px-4 py-2.5">
+                            <div class="sn-baru-display {{ $item->is_replaced ? '' : 'hidden' }} flex items-center gap-2">
+                                <span class="font-mono text-xs font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-2 py-1 sn-baru-text">{{ $item->serial_number_baru }}</span>
+                                <span class="text-xs text-slate-400 sn-baru-tanggal">{{ $item->replaced_at?->format('d/m/Y H:i') }}</span>
+                                <button type="button" class="btn-edit-sn text-xs text-blue-600 hover:text-blue-800" data-item-id="{{ $item->id }}">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </div>
+                            <div class="sn-baru-form {{ $item->is_replaced ? 'hidden' : '' }} flex items-center gap-2">
+                                <input type="text" class="sn-baru-input border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono w-40 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                                    placeholder="Input SN baru..." value="{{ $item->serial_number_baru }}">
+                                <button type="button" class="btn-save-sn bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                                    data-url="{{ route('garansi.items.replace-sn', [$garansi->id, $item->id]) }}">
+                                    Simpan
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -211,6 +229,69 @@
 
 @push('scripts')
 <script>
+     // ========== Replace SN (Serial Number Baru) ==========
+    document.querySelectorAll('.btn-save-sn').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const row = this.closest('[data-item-row]');
+            const input = row.querySelector('.sn-baru-input');
+            const snBaru = input.value.trim();
+
+            if (!snBaru) {
+                alert('SN baru tidak boleh kosong.');
+                return;
+            }
+
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ serial_number_baru: snBaru })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Gagal menyimpan SN baru.');
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    row.querySelector('.sn-baru-text').textContent = data.item.serial_number_baru;
+                    row.querySelector('.sn-baru-tanggal').textContent = data.item.replaced_at
+                        ? new Date(data.item.replaced_at).toLocaleString('id-ID')
+                        : '';
+                    row.querySelector('.sn-baru-form').classList.add('hidden');
+                    row.querySelector('.sn-baru-display').classList.remove('hidden');
+                    alert('SN baru tersimpan. Notifikasi WhatsApp sedang dikirim ke customer.');
+                } else {
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err.message))
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        });
+    });
+
+    document.querySelectorAll('.btn-edit-sn').forEach(button => {
+        button.addEventListener('click', function() {
+            const row = this.closest('[data-item-row]');
+            row.querySelector('.sn-baru-display').classList.add('hidden');
+            row.querySelector('.sn-baru-form').classList.remove('hidden');
+            row.querySelector('.sn-baru-input').focus();
+        });
+    });
     // ========== Kirim Ulang WA ==========
     document.querySelectorAll('.resend-wa-btn').forEach(button => {
         button.addEventListener('click', function() {

@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/{garansi}', [GaransiController::class, 'update'])->name('update');
         Route::delete('/{garansi}', [GaransiController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/{garansi}/status', [GaransiController::class, 'updateStatus'])->name('status');
+        Route::patch('/{garansi}/items/{item}/replace-sn', [GaransiController::class, 'replaceItemSerial'])->name('items.replace-sn');
         Route::post('/{garansi}/send-wa', [GaransiController::class, 'sendWA'])->name('send-wa');
         Route::post('/scrape-invoice', [GaransiController::class, 'scrapeInvoice'])->name('scrape-invoice');
         Route::post('/{garansi}/resend-wa/{log}', [GaransiController::class, 'resendWA'])->name('resend-wa');
