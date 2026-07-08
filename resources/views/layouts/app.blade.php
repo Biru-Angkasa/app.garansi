@@ -174,10 +174,43 @@
         </nav>
 
         @if(session('success'))
-        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-                <i class="fas fa-check-circle text-emerald-500 text-xl"></i>
-                <span class="font-medium text-sm">{{ session('success') }}</span>
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="fixed top-20 right-4 sm:right-6 z-[60] max-w-sm w-full">
+            <div class="bg-white border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 shadow-xl shadow-emerald-500/10">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
+                    <i class="fas fa-check text-sm"></i>
+                </div>
+                <span class="font-medium text-sm text-slate-800 flex-1">{{ session('success') }}</span>
+                <button @click="show = false" class="text-slate-300 hover:text-slate-500 transition-colors">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 6000)" x-show="show" x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="fixed top-20 right-4 sm:right-6 z-[60] max-w-sm w-full">
+            <div class="bg-white border border-rose-200 rounded-2xl p-4 flex items-center gap-3 shadow-xl shadow-rose-500/10">
+                <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                    <i class="fas fa-exclamation text-sm"></i>
+                </div>
+                <span class="font-medium text-sm text-slate-800 flex-1">{{ session('error') }}</span>
+                <button @click="show = false" class="text-slate-300 hover:text-slate-500 transition-colors">
+                    <i class="fas fa-xmark"></i>
+                </button>
             </div>
         </div>
         @endif
@@ -186,7 +219,53 @@
             @yield('content', $slot ?? '')
         </main>
 
+        {{-- Global delete confirmation modal --}}
+        <div x-data="{ open: false, message: '', form: null }"
+             x-cloak
+             @confirm-delete.window="open = true; message = $event.detail.message; form = $event.detail.form"
+             @keydown.escape.window="open = false">
+            <div x-show="open" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="open = false"></div>
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-trash-can text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 tracking-tight">Konfirmasi Hapus</h3>
+                    <p class="text-sm text-slate-500 mt-1.5" x-text="message"></p>
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" @click="open = false"
+                            class="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+                            Batal
+                        </button>
+                        <button type="button" @click="open = false; form && form.submit()"
+                            class="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-rose-500/20 transition-colors">
+                            Ya, Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+    <script>
+        function confirmDelete(form, message) {
+            window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { form: form, message: message } }));
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>
