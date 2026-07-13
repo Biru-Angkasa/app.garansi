@@ -19,20 +19,46 @@ class DashboardController extends Controller
             'selesai'    => Garansi::where('status', 'selesai')->count(),
         ];
 
-        // Statistik SLA (1-2 hari = Warning, >2 hari = Breach)
-        $slaWarning = Garansi::where('status', '!=', 'selesai')
-            ->whereBetween('updated_at', [now()->subDays(2), now()->subDays(1)])
-            ->count();
+        // ===============================
+        // HITUNG SLA SAMA PERSIS DENGAN HALAMAN DATA GARANSI
+        // ===============================
+        $slaWarning = 0;
+        $slaBreach = 0;
 
-        $slaBreach = Garansi::where('status', '!=', 'selesai')
-            ->where('updated_at', '<', now()->subDays(2))
-            ->count();
+        $garansis = Garansi::where('status', '!=', 'selesai')->get();
 
-        $recentGaransis = Garansi::with('items')->latest()->limit(5)->get();
+        foreach ($garansis as $garansi) {
 
-        // Ambil 10 log aktivitas terakhir
-        $activities = Activity::with('causer')->latest()->limit(10)->get();
+            $idleDays = $garansi->updated_at
+                ->copy()
+                ->startOfDay()
+                ->diffInDays(now()->copy()->startOfDay());
 
-        return view('dashboard', compact('stats', 'slaWarning', 'slaBreach', 'recentGaransis', 'activities'));
+            if ($idleDays >= 2) {
+                $slaBreach++;
+            } elseif ($idleDays >= 1) {
+                $slaWarning++;
+            }
+        }
+
+        // Data terbaru
+        $recentGaransis = Garansi::with('items')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // Aktivitas
+        $activities = Activity::with('causer')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('dashboard', compact(
+            'stats',
+            'slaWarning',
+            'slaBreach',
+            'recentGaransis',
+            'activities'
+        ));
     }
 }

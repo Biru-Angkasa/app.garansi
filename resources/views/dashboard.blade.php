@@ -94,34 +94,66 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($recentGaransis as $garansi)
                             @php
-                                $idleDays = now()->diffInDays($garansi->updated_at);
-                                $accent = '';
-                                if ($garansi->status !== 'selesai') {
-                                    if ($idleDays >= 2) $accent = 'border-l-4 border-l-rose-400';
-                                    elseif ($idleDays >= 1) $accent = 'border-l-4 border-l-amber-400';
+                                // Hitung berdasarkan tanggal (bukan 24 jam)
+                                $idleDays = $garansi->updated_at
+                                    ->copy()
+                                    ->startOfDay()
+                                    ->diffInDays(now()->copy()->startOfDay());
+
+                                // Status selain selesai dianggap belum selesai
+                                $belumSelesai = strtolower(trim($garansi->status)) !== 'selesai';
+
+                                // Border kiri
+                                $borderClass = '';
+
+                                if ($belumSelesai) {
+                                    if ($idleDays >= 2) {
+                                        $borderClass = 'border-l-4 border-rose-500';
+                                    } elseif ($idleDays >= 1) {
+                                        $borderClass = 'border-l-4 border-amber-500';
+                                    }
                                 }
                             @endphp
-                            <tr class="hover:bg-slate-50 transition-colors {{ $accent }}">
-                                <td class="px-6 py-3 font-medium text-slate-900">{{ $garansi->nama }}</td>
-                                <td class="px-6 py-3 text-slate-500 font-mono text-xs">{{ $garansi->invoice_pembelian ?? '-' }}</td>
-                                <td class="px-6 py-3 text-slate-600">{{ ucfirst($garansi->lokasi_chat) }}</td>
+
+                            <tr class="hover:bg-slate-50 transition-colors">
+
+                                <td class="px-6 py-3 font-medium text-slate-900 {{ $borderClass }}">
+                                    {{ $garansi->nama }}
+                                </td>
+
+                                <td class="px-6 py-3 text-slate-500 font-mono text-xs">
+                                    {{ $garansi->invoice_pembelian ?? '-' }}
+                                </td>
+
+                                <td class="px-6 py-3 text-slate-600">
+                                    {{ ucfirst($garansi->lokasi_chat) }}
+                                </td>
+
                                 <td class="px-6 py-3">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $garansi->status_color }}">
                                         {{ ucfirst($garansi->status) }}
                                     </span>
                                 </td>
+
                                 <td class="px-6 py-3 text-right">
-                                    <a href="{{ route('garansi.show', $garansi) }}" class="text-blue-600 hover:text-blue-700 font-medium text-xs">Detail</a>
+                                    <a href="{{ route('garansi.show', $garansi) }}"
+                                    class="text-blue-600 hover:text-blue-700 font-medium text-xs">
+                                        Detail
+                                    </a>
                                 </td>
+
                             </tr>
-                            @empty
+
+                        @empty
+
                             <tr>
                                 <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                                     <i class="fas fa-inbox text-2xl mb-2 block"></i>
                                     Belum ada data.
                                 </td>
                             </tr>
-                            @endforelse
+
+                        @endforelse
                         </tbody>
                     </table>
                 </div>

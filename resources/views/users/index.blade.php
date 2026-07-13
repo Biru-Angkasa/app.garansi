@@ -53,7 +53,7 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @if($user->id !== auth()->id())
-                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="event.preventDefault(); confirmDelete(this, 'Akun {{ addslashes($user->name) }} akan dihapus permanen.')">
+                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus akun ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-slate-400 hover:text-rose-600 transition-colors" title="Hapus">
                                         <i class="fas fa-trash"></i>

@@ -7,14 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WhatsappLog extends Model
 {
-    protected $fillable = [
-        'garansi_id',
-        'tujuan',
-        'lokasi',
-        'pesan',
-        'tipe',
-        'status_kirim',
-        'response_api',
+        protected $fillable = [
+        'garansi_id', 'tujuan', 'lokasi', 'pesan', 'image_data', 'tipe', 'status_kirim', 'response_api',
     ];
 
     public function garansi(): BelongsTo

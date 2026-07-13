@@ -3,13 +3,15 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GaransiController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrackingController;
+
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return view('welcome');
 });
-
+Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Route Profile Breeze
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
@@ -42,5 +44,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
     });
 });
+
 
 require __DIR__.'/auth.php';

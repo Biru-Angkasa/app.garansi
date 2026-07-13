@@ -61,4 +61,36 @@
             </p>
         @endif
     </form>
+    {{-- Tracking Garansi --}}
+<div class="mt-5 mb-6">
+    <a href="{{ route('tracking.index') }}"
+       class="group flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 hover:bg-blue-100 hover:border-blue-200 transition-all duration-300 p-4">
+
+        <div class="flex items-center gap-4">
+
+            <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                <i class="fas fa-box-open text-lg"></i>
+            </div>
+
+            <div>
+                <h3 class="font-semibold text-slate-800">
+                    Cek Status Garansi
+                </h3>
+
+                <p class="text-sm text-slate-500">
+                    Lacak status garansi tanpa perlu login.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="text-blue-600 group-hover:translate-x-1 transition">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+
+    </a>
+</div>
+
+        </a>
+    </div> 
 </x-guest-layout>

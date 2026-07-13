@@ -10,18 +10,13 @@ class GaransiObserver
 {
     public function created(Garansi $garansi): void
     {
+        // Dikosongkan, karena kirim WA create dipindah ke Controller 
+        // agar data barang (items) sudah pasti tersimpan dulu.
     }
 
-        public function updated(Garansi $garansi): void
+    public function updated(Garansi $garansi): void
     {
-        // Jika status berubah
-        if ($garansi->wasChanged('status')) {
-            try {
-                $garansi->load('items');
-                app(WhatsappService::class)->sendStatusNotification($garansi);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Gagal kirim WA status notification: " . $e->getMessage());
-            }
-        }
+        // Dikosongkan, karena kirim WA update status (teks/foto) 
+        // sudah dihandle langsung di GaransiController@updateStatus.
     }
 }

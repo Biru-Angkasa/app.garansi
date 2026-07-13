@@ -15,7 +15,7 @@ class Garansi extends Model
 
     protected $fillable = [
         'nama', 'no_hp', 'invoice_pembelian', 'tanggal_beli', 'nama_marketplace',
-        'kerusakan', 'kelengkapan_barang', 'lokasi_chat', 'status', 'catatan', 'tanggal_sampai',
+        'kerusakan', 'kelengkapan_barang', 'lokasi_chat', 'status', 'catatan', 'tanggal_sampai', 'sn_pengganti', 'resi_pengiriman',
     ];
 
     protected $casts = [
@@ -27,9 +27,28 @@ class Garansi extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nama', 'status', 'kerusakan', 'catatan', 'lokasi_chat'])
+            ->logOnly([
+                'nama',
+                'status',
+                'kerusakan',
+                'catatan',
+                'lokasi_chat',
+            ])
             ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "Data garansi telah di-{$eventName}");
+    }
+    protected static function booted()
+    {
+        parent::booted();
+
+        static::deleted(function ($garansi) {
+            \Spatie\Activitylog\Models\Activity::query()
+                ->where('subject_type', self::class)
+                ->where('subject_id', $garansi->id)
+                ->where('description', 'Data garansi telah di-deleted')
+                ->delete();
+        });
     }
 
     public function items(): HasMany

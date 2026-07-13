@@ -6,11 +6,12 @@ use App\Models\Garansi;
 use App\Models\GaransiItem;
 use App\Services\WhatsappService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class GaransiController extends Controller
 {
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Garansi::with('items');
 
@@ -19,21 +20,18 @@ class GaransiController extends Controller
         }
 
         if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-            ->orWhere('invoice_pembelian', 'like', "%{$search}%")
-            ->orWhere('no_hp', 'like', "%{$search}%")
-            ->orWhereHas('items', function ($iq) use ($search) {
-                $iq->where('serial_number', 'like', "%{$search}%")
-                    ->orWhere('serial_number_baru', 'like', "%{$search}%");
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                ->orWhere('invoice_pembelian', 'like', "%{$search}%")
+                ->orWhere('no_hp', 'like', "%{$search}%")
+                ->orWhereHas('items', function ($iq) use ($search) {
+                    $iq->where('serial_number', 'like', "%{$search}%")
+                        ->orWhere('serial_number_baru', 'like', "%{$search}%");
                 });
             });
         }
 
-        // TAMBAHKAN URUTAN DI SINI:
-        // 1. Status 'selesai' taruh paling bawah (1), selain itu di atas (0)
-        // 2. Urutkan berdasarkan updated_at terlama (asc), sehingga yang merah (paling lama diam) naik ke atas
         $query->orderByRaw("CASE WHEN status = 'selesai' THEN 1 ELSE 0 END")
               ->orderBy('updated_at', 'asc');
 
@@ -54,21 +52,20 @@ class GaransiController extends Controller
     public function create()
     {
         $lokasiList = config('whatsapp.lokasi');
-
         return view('garansi.create', compact('lokasiList'));
     }
 
-        public function store(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'nama'               => ['required', 'string', 'max:255'],
             'no_hp'              => ['required', 'string', 'max:20'],
-            'invoice_pembelian' => ['nullable', 'string', 'max:255'],
+            'invoice_pembelian'  => ['nullable', 'string', 'max:255'],
             'tanggal_beli'       => ['required', 'date'],
             'nama_marketplace'   => ['required', 'string', 'max:255'],
             'kerusakan'          => ['required', 'string'],
             'kelengkapan_barang' => ['required', 'string'],
-            'lokasi_chat' => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
+            'lokasi_chat'        => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
             'items'              => ['required', 'array', 'min:1'],
             'items.*.nama_barang'   => ['required', 'string', 'max:255'],
             'items.*.serial_number' => ['required', 'string', 'max:255'],
@@ -77,7 +74,7 @@ class GaransiController extends Controller
         $garansi = Garansi::create([
             'nama'               => $validated['nama'],
             'no_hp'              => $validated['no_hp'],
-            'invoice_pembelian' => $validated['invoice_pembelian'] ?? null,
+            'invoice_pembelian'  => $validated['invoice_pembelian'] ?? null,
             'tanggal_beli'       => $validated['tanggal_beli'],
             'nama_marketplace'   => $validated['nama_marketplace'],
             'kerusakan'          => $validated['kerusakan'],
@@ -93,12 +90,11 @@ class GaransiController extends Controller
             ]);
         }
 
-        // PINDAHKAN KIRIM WA KE SINI (Setelah barang disimpan)
         try {
-            $garansi->load('items'); // Pastikan relasi barang dimuat
+            $garansi->load('items');
             app(WhatsappService::class)->sendCreateNotification($garansi);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Gagal kirim WA create: " . $e->getMessage());
+            Log::error("Gagal kirim WA create: " . $e->getMessage());
         }
 
         return redirect()
@@ -109,15 +105,11 @@ class GaransiController extends Controller
     public function show(Garansi $garansi)
     {
         $garansi->load(['items', 'whatsappLogs' => function ($query) {
-            $query->latest(); // Urutkan dari yang paling baru
+            $query->latest();
         }]);
+        
         $statusList = [
-            'pending',
-            'repair',
-            'replace',
-            'to distribution',
-            'pengiriman',
-            'selesai',
+            'pending', 'repair', 'replace', 'to distribution', 'pengiriman', 'selesai',
         ];
 
         return view('garansi.show', compact('garansi', 'statusList'));
@@ -127,7 +119,6 @@ class GaransiController extends Controller
     {
         $garansi->load('items');
         $lokasiList = config('whatsapp.lokasi');
-
         return view('garansi.edit', compact('garansi', 'lokasiList'));
     }
 
@@ -136,14 +127,14 @@ class GaransiController extends Controller
         $validated = $request->validate([
             'nama'               => ['required', 'string', 'max:255'],
             'no_hp'              => ['required', 'string', 'max:20'],
-            'invoice_pembelian'          => ['nullable', 'string', 'max:255'],
+            'invoice_pembelian'  => ['nullable', 'string', 'max:255'],
             'tanggal_beli'       => ['required', 'date'],
             'nama_marketplace'   => ['required', 'string', 'max:255'],
             'kerusakan'          => ['required', 'string'],
             'kelengkapan_barang' => ['required', 'string'],
-            'lokasi_chat' => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
+            'lokasi_chat'        => ['required', 'string', Rule::in(array_keys(config('whatsapp.lokasi')))],
             'items'              => ['required', 'array', 'min:1'],
-            'items.*.id'            => ['nullable', 'exists:garansi_items,id'],
+            'items.*.id'         => ['nullable', 'exists:garansi_items,id'],
             'items.*.nama_barang'   => ['required', 'string', 'max:255'],
             'items.*.serial_number' => ['required', 'string', 'max:255'],
         ]);
@@ -159,7 +150,6 @@ class GaransiController extends Controller
             'lokasi_chat'        => $validated['lokasi_chat'],
         ]);
 
-        // Sync items
         $existingIds = [];
         foreach ($validated['items'] as $itemData) {
             if (!empty($itemData['id'])) {
@@ -179,7 +169,6 @@ class GaransiController extends Controller
             }
         }
 
-        // Hapus item yang tidak ada di form
         $garansi->items()->whereNotIn('id', $existingIds)->delete();
 
         return redirect()
@@ -190,28 +179,74 @@ class GaransiController extends Controller
     public function destroy(Garansi $garansi)
     {
         $garansi->delete();
-
-        return redirect()
-            ->route('garansi.index')
-            ->with('success', 'Data garansi berhasil dihapus.');
+        return redirect()->route('garansi.index')->with('success', 'Data garansi berhasil dihapus.');
     }
 
     /**
-     * Update status garansi (AJAX)
+     * Update status garansi dengan percabangan (Replace, Pengiriman, Kamera)
      */
     public function updateStatus(Request $request, Garansi $garansi)
     {
-        $validated = $request->validate([
-            'status'  => ['required', 'in:pending,repair,replace,to distribution,pengiriman,selesai'],
-            'catatan' => ['nullable', 'string'],
-        ]);
+        $rules = [
+            'status'           => ['required', 'in:pending,repair,replace,to distribution,pengiriman,selesai'],
+            'catatan'          => ['nullable', 'string'],
+            'sn_pengganti'     => ['nullable', 'string', 'max:255'],
+            'resi_pengiriman'  => ['nullable', 'string', 'max:255'],
+            'bukti_foto_data'  => ['nullable', 'string'], // Base64 dari JS
+        ];
 
-        $garansi->update([
+        $validated = $request->validate($rules);
+
+        $data = [
             'status'  => $validated['status'],
             'catatan' => $validated['catatan'] ?? $garansi->catatan,
-        ]);
+        ];
 
-        // Observer akan otomatis kirim WA jika status = selesai
+        if (isset($validated['sn_pengganti'])) $data['sn_pengganti'] = $validated['sn_pengganti'];
+        if (isset($validated['resi_pengiriman'])) $data['resi_pengiriman'] = $validated['resi_pengiriman'];
+
+        $garansi->update($data);
+
+        // Matikan observer default agar tidak dobel kirim, kita handle di sini
+        // (Pastikan di GaransiObserver.php method updated() di kosongkan/dirombak)
+
+        try {
+            if (!empty($validated['bukti_foto_data'])) {
+                // Jika ada foto, kirim sebagai Image + Caption ke WAHA
+                $caption = "Halo *{$garansi->nama}*,\n\n";
+                $caption .= "Status garansi Anda telah diperbarui:\n";
+                $caption .= "🔄 Status: *" . strtoupper($garansi->status) . "*\n";
+                
+                if ($garansi->status === 'replace' && !empty($garansi->sn_pengganti)) {
+                    $caption .= "🔧 SN Pengganti: *{$garansi->sn_pengganti}*\n";
+                }
+                if ($garansi->status === 'pengiriman' && !empty($garansi->resi_pengiriman)) {
+                    $caption .= "🚚 No Resi: *{$garansi->resi_pengiriman}*\n";
+                }
+                if ($garansi->catatan) {
+                    $caption .= "📝 Catatan: {$garansi->catatan}\n";
+                }
+                $caption .= "\nTerima kasih 🙏";
+
+                $result = app(WhatsappService::class)->sendImage(
+                $garansi->no_hp,
+                $caption,
+                $validated['bukti_foto_data'],
+                $garansi->lokasi_chat,
+                $garansi->id,
+                'photo_update'
+            );
+
+            if (!$result['success']) {
+                Log::error('WA foto gagal dikirim', $result);
+            }
+            } else {
+                // Jika tidak ada foto, kirim WA teks biasa
+                app(WhatsappService::class)->sendStatusNotification($garansi);
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal kirim WA update status: " . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -221,8 +256,7 @@ class GaransiController extends Controller
     }
 
     /**
-     * Simpan Serial Number baru untuk sebuah item (dipakai saat status = replace).
-     * SN lama tetap disimpan sebagai histori, tidak ditimpa.
+     * Simpan Serial Number baru untuk sebuah item
      */
     public function replaceItemSerial(Request $request, Garansi $garansi, GaransiItem $item)
     {
@@ -240,7 +274,7 @@ class GaransiController extends Controller
         try {
             app(WhatsappService::class)->sendReplaceNotification($garansi, $item->fresh());
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Gagal kirim WA replace SN: " . $e->getMessage());
+            Log::error("Gagal kirim WA replace SN: " . $e->getMessage());
         }
 
         return response()->json([
@@ -271,16 +305,13 @@ class GaransiController extends Controller
     }
 
     /**
-     * Scraping Invoice Pembelian (placeholder — logic scraping dibuat nanti)
+     * Scraping Invoice Pembelian
      */
     public function scrapeInvoice(Request $request)
     {
         $request->validate([
             'invoice_pembelian' => ['required', 'string'],
         ]);
-
-        // TODO: Implementasi logic scraping Invoice Pembelian
-        // Contoh: scrape data dari marketplace berdasarkan Invoice Pembelian
 
         return response()->json([
             'success' => false,
@@ -289,7 +320,7 @@ class GaransiController extends Controller
         ]);
     }
 
-        /**
+    /**
      * Kirim ulang pesan WhatsApp berdasarkan Log
      */
     public function resendWA(Request $request, Garansi $garansi, $logId)
@@ -297,18 +328,30 @@ class GaransiController extends Controller
         try {
             $log = \App\Models\WhatsappLog::findOrFail($logId);
 
-            $result = app(WhatsappService::class)->send(
-                $garansi->no_hp,
-                $log->pesan,
-                $garansi->lokasi_chat,
-                $garansi->id,
-                'resend'
-            );
+            // Jika log punya foto, kirim ulang sebagai foto
+            if ($log->image_data) {
+                $result = app(WhatsappService::class)->sendImage(
+                    $garansi->no_hp,
+                    $log->pesan,
+                    $log->image_data,
+                    $garansi->lokasi_chat,
+                    $garansi->id,
+                    'resend'
+                );
+            } else {
+                // Jika tidak, kirim ulang sebagai teks
+                $result = app(WhatsappService::class)->send(
+                    $garansi->no_hp,
+                    $log->pesan,
+                    $garansi->lokasi_chat,
+                    $garansi->id,
+                    'resend'
+                );
+            }
 
             return response()->json($result);
             
         } catch (\Exception $e) {
-            // Jika ada error, kembalikan sebagai JSON 500
             return response()->json([
                 'success' => false,
                 'message' => 'Server Error: ' . $e->getMessage()

@@ -224,6 +224,144 @@ class WhatsappService
             'status_update'
         );   
     }
+
+    /**
+     * Kirim Foto ke WhatsApp via WAHA
+     */
+
+    /**
+     * Kirim gambar via WAHA.
+     *
+     * Menerima $base64Image dalam salah satu dari dua bentuk:
+     *  - Data URI lengkap:  "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+     *  - Base64 murni:      "/9j/4AAQSkZJRg..."
+     *
+     * PENTING: field `file.data` yang dikirim ke WAHA HARUS berupa base64 MURNI
+     * (tanpa prefix "data:mime;base64,"). Mengirim data URI utuh membuat WAHA
+     * men-decode string yang mengandung karakter non-base64 (":", ";", ",")
+     * sehingga bytes gambar hasil decode jadi rusak/terpotong — inilah sebab
+     * gambar "stuck download" / gagal dibuka di WhatsApp meski status API sukses.
+     */
+    public function sendImage(
+        string $tujuan,
+        string $caption,
+        string $base64Image,
+        string $lokasi,
+        ?int $garansiId = null,
+        string $tipe = 'photo_update'
+    ): array {
+        $config = config("whatsapp.lokasi.{$lokasi}");
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'message' => "Lokasi '{$lokasi}' tidak ditemukan di konfigurasi.",
+            ];
+        }
+
+        // ---- 1. Pisahkan mimetype & base64 murni dari input ----
+        $mime = 'image/jpeg';
+        $extension = 'jpg';
+        $pureBase64 = $base64Image;
+
+        if (preg_match('/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s', $base64Image, $matches)) {
+            $mime = $matches[1];
+            $pureBase64 = $matches[2];
+
+            $extension = match ($mime) {
+                'image/png'  => 'png',
+                'image/webp' => 'webp',
+                'image/gif'  => 'gif',
+                default      => 'jpg',
+            };
+        }
+
+        // Buang whitespace/newline yang kadang ikut ter-copy pada string base64 panjang.
+        $pureBase64 = preg_replace('/\s+/', '', $pureBase64);
+        $filename = 'bukti.' . $extension;
+
+        // ---- 2. Validasi base64 benar-benar bisa di-decode & tidak kosong ----
+        $binary = base64_decode($pureBase64, true);
+
+        if ($pureBase64 === '' || $binary === false || strlen($binary) === 0) {
+            Log::error("WAHA Image API Error ({$lokasi}): base64 gambar tidak valid atau kosong.");
+
+            return [
+                'success' => false,
+                'message' => 'Data gambar tidak valid, gagal dikirim.',
+            ];
+        }
+
+        // ---- 3. Siapkan tujuan & log awal ----
+        $tujuan = $this->normalizePhone($tujuan);
+        $chatId = $tujuan . '@c.us';
+
+        $log = WhatsappLog::create([
+            'garansi_id'   => $garansiId,
+            'tujuan'       => $tujuan,
+            'lokasi'       => $lokasi,
+            'pesan'        => $caption,
+            // Simpan sebagai data URI supaya tetap bisa ditampilkan langsung di <img src="...">
+            'image_data'   => 'data:' . $mime . ';base64,' . $pureBase64,
+            'tipe'         => $tipe,
+            'status_kirim' => 'pending',
+        ]);
+
+        $wahaUrl = rtrim($config['url'], '/') . '/api/sendImage';
+        $apiKey = $config['api_key'] ?? '';
+
+        try {
+            $http = Http::timeout(30);
+
+            if (!empty($apiKey)) {
+                $http = $http->withHeaders([
+                    'X-Api-Key' => $apiKey,
+                ]);
+            }
+
+            $response = $http->post($wahaUrl, [
+                'session' => $config['session'],
+                'chatId'  => $chatId,
+                'file'    => [
+                    'mimetype' => $mime,
+                    'filename' => $filename,
+                    // Base64 MURNI, tanpa prefix "data:...;base64,".
+                    'data'     => $pureBase64,
+                ],
+                'caption' => $caption,
+            ]);
+
+            $body = $response->body();
+            $success = $response->successful();
+
+            $log->update([
+                'status_kirim'  => $success ? 'terkirim' : 'gagal',
+                'response_api'  => $body,
+            ]);
+
+            if (!$success) {
+                Log::error("WAHA Image API Error ({$lokasi}): HTTP {$response->status()} - {$body}");
+            }
+
+            return [
+                'success'  => $success,
+                'message'  => $success ? 'Foto berhasil dikirim.' : 'Gagal mengirim foto.',
+                'response' => $body,
+            ];
+        } catch (\Exception $e) {
+            $log->update([
+                'status_kirim' => 'gagal',
+                'response_api' => $e->getMessage(),
+            ]);
+
+            Log::error("WAHA Image API Error ({$lokasi}): " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Gagal mengirim foto: ' . $e->getMessage(),
+            ];
+        }
+    }
     /**
      * Pesan otomatis saat SN barang diganti (replace)
      */
