@@ -7,12 +7,13 @@ use App\Http\Controllers\TrackingController;
 
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        return app(DashboardController::class)->index();
+    }
     return view('welcome');
-});
-Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
-Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+})->name('dashboard');
 
+Route::middleware('auth')->group(function () {
     // Route Profile Breeze
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
@@ -45,5 +46,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
 
 require __DIR__.'/auth.php';
