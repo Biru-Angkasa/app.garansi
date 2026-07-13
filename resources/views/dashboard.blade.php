@@ -1,259 +1,262 @@
 <x-app-layout>
-    <div class="relative space-y-8 pb-8">
-        <div class="absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_45%),radial-gradient(circle_at_top_right,_rgba(15,23,42,0.08),_transparent_38%)]"></div>
-
-        <header class="flex flex-col gap-6 rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-8 lg:flex-row lg:items-end lg:justify-between">
-            <div class="max-w-3xl space-y-4">
-                <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                    ringkasan operasional
-                </div>
-
-                <div class="space-y-3">
-                    <h1 class="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+    <div class="space-y-6 pb-12">
+        {{-- Header Section --}}
+        <header class="space-y-4">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
                         Dashboard
                     </h1>
-                    <p class="max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-                        Pantau status garansi, lihat antrean kerja yang paling lama diam, dan tindak lanjuti aktivitas terbaru dari satu tempat.
+                    <p class="mt-2 text-base text-slate-600">
+                        Ringkasan status garansi dan aktivitas sistem real-time
                     </p>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[420px]">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">total</div>
-                    <div class="mt-1 text-2xl font-semibold tabular-nums text-slate-950">{{ $stats['total'] }}</div>
-                </div>
-                <div class="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">warning</div>
-                    <div class="mt-1 text-2xl font-semibold tabular-nums text-amber-900">{{ $slaWarning }}</div>
-                </div>
-                <div class="rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700">breach</div>
-                    <div class="mt-1 text-2xl font-semibold tabular-nums text-rose-900">{{ $slaBreach }}</div>
-                </div>
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">selesai</div>
-                    <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-900">{{ $stats['selesai'] }}</div>
-                </div>
+                <a href="{{ route('garansi.create') }}"
+                   class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-blue-600/20 active:scale-95 transition-all duration-200 w-full md:w-auto">
+                    <i class="fas fa-plus text-sm"></i> Tambah Data Garansi
+                </a>
             </div>
         </header>
 
-        @php
-            $statCards = [
-                ['label' => 'Pending', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'tone' => 'slate', 'status' => 'pending'],
-                ['label' => 'Repair', 'value' => $stats['repair'], 'icon' => 'fa-screwdriver-wrench', 'tone' => 'blue', 'status' => 'repair'],
-                ['label' => 'Replace', 'value' => $stats['replace'], 'icon' => 'fa-arrows-rotate', 'tone' => 'violet', 'status' => 'replace'],
-                ['label' => 'Distribusi', 'value' => $stats['distribusi'], 'icon' => 'fa-boxes-stacked', 'tone' => 'amber', 'status' => 'to distribution'],
-                ['label' => 'Pengiriman', 'value' => $stats['pengiriman'], 'icon' => 'fa-truck-fast', 'tone' => 'sky', 'status' => 'pengiriman'],
-            ];
-
-            $toneMap = [
-                'slate' => [
-                    'card' => 'border-slate-200 bg-slate-50/80 text-slate-600',
-                    'icon' => 'bg-slate-900 text-white',
-                ],
-                'blue' => [
-                    'card' => 'border-blue-200 bg-blue-50/80 text-blue-600',
-                    'icon' => 'bg-blue-600 text-white',
-                ],
-                'violet' => [
-                    'card' => 'border-violet-200 bg-violet-50/80 text-violet-600',
-                    'icon' => 'bg-violet-600 text-white',
-                ],
-                'amber' => [
-                    'card' => 'border-amber-200 bg-amber-50/80 text-amber-600',
-                    'icon' => 'bg-amber-600 text-white',
-                ],
-                'sky' => [
-                    'card' => 'border-sky-200 bg-sky-50/80 text-sky-600',
-                    'icon' => 'bg-sky-600 text-white',
-                ],
-            ];
-        @endphp
-
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            @foreach ($statCards as $card)
-                <a
-                    href="{{ route('garansi.index', ['status' => $card['status']]) }}"
-                    class="group flex items-center gap-4 rounded-[1.5rem] border p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 {{ $toneMap[$card['tone']]['card'] }}"
-                >
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm {{ $toneMap[$card['tone']]['icon'] }}">
-                        <i class="fas {{ $card['icon'] }} text-sm"></i>
-                    </div>
-
-                    <div class="min-w-0">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                            {{ $card['label'] }}
-                        </div>
-                        <div class="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-slate-950">
-                            {{ $card['value'] }}
-                        </div>
-                    </div>
-
-                    <div class="ml-auto text-slate-400 transition-transform duration-200 group-hover:translate-x-1">
-                        <i class="fas fa-arrow-right text-xs"></i>
-                    </div>
-                </a>
-            @endforeach
-        </section>
-
-        <section class="grid gap-4 lg:grid-cols-2">
-            <article class="rounded-[2rem] border border-amber-200/80 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_16px_40px_rgba(120,53,15,0.08)]">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">
-                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                            perhatian
-                        </div>
-                        <h2 class="mt-4 text-xl font-semibold tracking-tight text-slate-950">
-                            Garansi yang mulai diam
-                        </h2>
-                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-600">
-                            Item yang tidak bergerak 1–2 hari perlu dipantau agar tidak menumpuk ke tahap keterlambatan.
-                        </p>
-                    </div>
-                    <div class="rounded-2xl border border-amber-200 bg-white p-4 text-right shadow-sm">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">warning</div>
-                        <div class="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-amber-900">{{ $slaWarning }}</div>
+        {{-- KPI Cards Grid --}}
+        <div class="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5">
+            <!-- Total Unit -->
+            <div class="bg-white rounded-xl border border-slate-200/60 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Unit</span>
+                    <div class="w-9 h-9 bg-blue-50/80 rounded-lg flex items-center justify-center text-blue-600">
+                        <i class="fas fa-boxes text-sm"></i>
                     </div>
                 </div>
-            </article>
+                <div class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                    {{ $stats['total'] }}
+                </div>
+                <p class="mt-2 text-xs text-slate-500">Semua data garansi</p>
+            </div>
 
-            <article class="rounded-[2rem] border border-rose-200/80 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_16px_40px_rgba(127,29,29,0.08)]">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <div class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700">
-                            <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-                            segera tindak
-                        </div>
-                        <h2 class="mt-4 text-xl font-semibold tracking-tight text-slate-950">
-                            Garansi melewati SLA
-                        </h2>
-                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-600">
-                            Item yang diam lebih dari 2 hari perlu diprioritaskan agar alur layanan tetap rapi.
-                        </p>
-                    </div>
-                    <div class="rounded-2xl border border-rose-200 bg-white p-4 text-right shadow-sm">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700">breach</div>
-                        <div class="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-rose-900">{{ $slaBreach }}</div>
+            <!-- SLA Warning -->
+            <div class="bg-white rounded-xl border border-amber-200/50 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full -mr-10 -mt-10"></div>
+                <div class="flex items-center justify-between mb-3 relative z-10">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-amber-700">⚠ Warning</span>
+                    <div class="w-9 h-9 bg-amber-50/80 rounded-lg flex items-center justify-center text-amber-600">
+                        <i class="fas fa-triangle-exclamation text-sm"></i>
                     </div>
                 </div>
-            </article>
-        </section>
+                <div class="text-3xl md:text-4xl font-black text-amber-600 tracking-tight relative z-10">
+                    {{ $slaWarning }}
+                </div>
+                <p class="mt-2 text-xs text-amber-600/70 relative z-10">Diam 1-2 hari</p>
+            </div>
 
-        <section class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
-            <article class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-                    <div>
-                        <h2 class="text-lg font-semibold tracking-tight text-slate-950">Data garansi terbaru</h2>
-                        <p class="mt-1 text-sm text-slate-500">Lima data paling baru untuk kontrol cepat.</p>
+            <!-- SLA Breach -->
+            <div class="bg-white rounded-xl border border-rose-200/50 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-rose-500/5 rounded-full -mr-10 -mt-10"></div>
+                <div class="flex items-center justify-between mb-3 relative z-10">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-rose-700">⛔ Breach</span>
+                    <div class="w-9 h-9 bg-rose-50/80 rounded-lg flex items-center justify-center text-rose-600">
+                        <i class="fas fa-circle-xmark text-sm"></i>
                     </div>
-                    <a href="{{ route('garansi.index') }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-                        Lihat semua
-                        <i class="fas fa-arrow-right text-[11px]"></i>
-                    </a>
+                </div>
+                <div class="text-3xl md:text-4xl font-black text-rose-600 tracking-tight relative z-10">
+                    {{ $slaBreach }}
+                </div>
+                <p class="mt-2 text-xs text-rose-600/70 relative z-10">Melewati SLA</p>
+            </div>
+
+            <!-- Selesai -->
+            <div class="bg-white rounded-xl border border-emerald-200/50 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full -mr-10 -mt-10"></div>
+                <div class="flex items-center justify-between mb-3 relative z-10">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">✓ Selesai</span>
+                    <div class="w-9 h-9 bg-emerald-50/80 rounded-lg flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-check-circle text-sm"></i>
+                    </div>
+                </div>
+                <div class="text-3xl md:text-4xl font-black text-emerald-600 tracking-tight relative z-10">
+                    {{ $stats['selesai'] }}
+                </div>
+                <p class="mt-2 text-xs text-emerald-600/70 relative z-10">Garansi selesai</p>
+            </div>
+
+            <!-- Pending -->
+            <div class="bg-white rounded-xl border border-slate-200/60 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pending</span>
+                    <div class="w-9 h-9 bg-slate-100/80 rounded-lg flex items-center justify-center text-slate-600">
+                        <i class="fas fa-hourglass-half text-sm"></i>
+                    </div>
+                </div>
+                <div class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                    {{ $stats['pending'] }}
+                </div>
+                <p class="mt-2 text-xs text-slate-500">Menunggu proses</p>
+            </div>
+        </div>
+
+        {{-- Status Distribution --}}
+        <div class="grid gap-4 lg:grid-cols-3">
+            <!-- Repair -->
+            <div class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-blue-50/80 rounded-lg flex items-center justify-center text-blue-600">
+                        <i class="fas fa-wrench text-sm"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 text-sm uppercase tracking-wide">Perbaikan</h3>
+                </div>
+                <div class="text-4xl font-black text-slate-900 tracking-tight">{{ $stats['repair'] }}</div>
+                <p class="mt-3 text-sm text-slate-600">Sedang dalam perbaikan</p>
+            </div>
+
+            <!-- Replace -->
+            <div class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-purple-50/80 rounded-lg flex items-center justify-center text-purple-600">
+                        <i class="fas fa-arrow-right-arrow-left text-sm"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 text-sm uppercase tracking-wide">Penggantian</h3>
+                </div>
+                <div class="text-4xl font-black text-slate-900 tracking-tight">{{ $stats['replace'] }}</div>
+                <p class="mt-3 text-sm text-slate-600">Perlu unit pengganti</p>
+            </div>
+
+            <!-- Distribusi -->
+            <div class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-indigo-50/80 rounded-lg flex items-center justify-center text-indigo-600">
+                        <i class="fas fa-truck text-sm"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 text-sm uppercase tracking-wide">Distribusi</h3>
+                </div>
+                <div class="text-4xl font-black text-slate-900 tracking-tight">{{ $stats['distribusi'] }}</div>
+                <p class="mt-3 text-sm text-slate-600">Dalam tahap distribusi</p>
+            </div>
+        </div>
+
+        {{-- Main Content Grid --}}
+        <div class="grid gap-4 lg:grid-cols-3">
+            {{-- Recent Garansis Table --}}
+            <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200/60 overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-200/40 bg-gradient-to-r from-slate-50/50 to-transparent">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-semibold text-slate-900 flex items-center gap-2.5">
+                            <i class="fas fa-list-check text-blue-600"></i>
+                            Data Garansi Terbaru
+                        </h2>
+                        <a href="{{ route('garansi.index') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                            Lihat Semua →
+                        </a>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50/80 text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50/50 border-b border-slate-200/40">
                             <tr>
-                                <th class="px-6 py-4 font-semibold">Nama</th>
-                                <th class="px-6 py-4 font-semibold">Invoice</th>
-                                <th class="px-6 py-4 font-semibold">Lokasi</th>
-                                <th class="px-6 py-4 font-semibold">Status</th>
-                                <th class="px-6 py-4 text-right font-semibold">Aksi</th>
+                                <th class="px-6 py-3 text-left font-semibold text-slate-700">Nama</th>
+                                <th class="px-6 py-3 text-left font-semibold text-slate-700">Invoice</th>
+                                <th class="px-6 py-3 text-left font-semibold text-slate-700">Lokasi</th>
+                                <th class="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
+                                <th class="px-6 py-3 text-center font-semibold text-slate-700">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-200/40">
                             @forelse ($recentGaransis as $garansi)
                                 @php
                                     $idleDays = $garansi->updated_at->copy()->startOfDay()->diffInDays(now()->copy()->startOfDay());
                                     $belumSelesai = strtolower(trim($garansi->status)) !== 'selesai';
-                                    $urgency = '';
+                                    $rowClass = '';
 
                                     if ($belumSelesai) {
                                         if ($idleDays >= 2) {
-                                            $urgency = 'border-l-4 border-rose-500';
+                                            $rowClass = 'bg-rose-50/30 hover:bg-rose-50/50';
                                         } elseif ($idleDays >= 1) {
-                                            $urgency = 'border-l-4 border-amber-500';
+                                            $rowClass = 'bg-amber-50/30 hover:bg-amber-50/50';
+                                        } else {
+                                            $rowClass = 'hover:bg-slate-50/50';
                                         }
+                                    } else {
+                                        $rowClass = 'hover:bg-slate-50/50';
                                     }
                                 @endphp
-
-                                <tr class="group hover:bg-slate-50/70">
-                                    <td class="px-6 py-4 font-medium text-slate-950 {{ $urgency }}">
-                                        <div class="max-w-[220px] truncate">{{ $garansi->nama }}</div>
+                                <tr class="{{ $rowClass }} transition-colors duration-200">
+                                    <td class="px-6 py-3 font-medium text-slate-900">
+                                        {{ Str::limit($garansi->nama, 20) }}
                                     </td>
-                                    <td class="px-6 py-4 font-mono text-xs text-slate-500">
-                                        {{ $garansi->invoice_pembelian ?? '-' }}
+                                    <td class="px-6 py-3 text-slate-600 font-mono text-xs">
+                                        {{ $garansi->invoice_pembelian ?? '—' }}
                                     </td>
-                                    <td class="px-6 py-4 text-slate-600">
-                                        {{ ucfirst($garansi->lokasi_chat) }}
+                                    <td class="px-6 py-3 text-slate-600 text-xs uppercase tracking-wide">
+                                        {{ $garansi->lokasi_chat }}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $garansi->status_color }}">
+                                    <td class="px-6 py-3">
+                                        @php
+                                            $statusColors = [
+                                                'pending' => 'bg-slate-100/80 text-slate-700',
+                                                'repair' => 'bg-blue-100/80 text-blue-700',
+                                                'replace' => 'bg-purple-100/80 text-purple-700',
+                                                'distribusi' => 'bg-indigo-100/80 text-indigo-700',
+                                                'pengiriman' => 'bg-cyan-100/80 text-cyan-700',
+                                                'selesai' => 'bg-emerald-100/80 text-emerald-700',
+                                            ];
+                                            $statusColor = $statusColors[strtolower($garansi->status)] ?? 'bg-slate-100/80 text-slate-700';
+                                        @endphp
+                                        <span class="inline-block px-2.5 py-1 rounded-md text-xs font-semibold {{ $statusColor }}">
                                             {{ ucfirst($garansi->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('garansi.show', $garansi) }}" class="font-medium text-blue-600 transition hover:text-blue-700">
-                                            Detail
+                                    <td class="px-6 py-3 text-center">
+                                        <a href="{{ route('garansi.show', $garansi) }}"
+                                           class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150">
+                                            <i class="fas fa-arrow-right text-xs"></i>
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-14 text-center">
-                                        <div class="mx-auto max-w-sm space-y-2">
-                                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                                                <i class="fas fa-inbox"></i>
-                                            </div>
-                                            <p class="text-sm font-medium text-slate-900">Belum ada data garansi.</p>
-                                            <p class="text-sm text-slate-500">Data baru akan muncul di sini setelah klaim masuk.</p>
-                                        </div>
+                                    <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                                        <i class="fas fa-inbox text-2xl mb-2 opacity-40"></i>
+                                        <p class="text-sm">Belum ada data garansi</p>
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-            </article>
+            </div>
 
-            <aside class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-                <div class="border-b border-slate-100 px-6 py-5">
-                    <h2 class="text-lg font-semibold tracking-tight text-slate-950">Aktivitas terbaru</h2>
-                    <p class="mt-1 text-sm text-slate-500">Log tindakan terakhir yang terekam di sistem.</p>
+            {{-- Activity Log Sidebar --}}
+            <aside class="bg-white rounded-xl border border-slate-200/60 overflow-hidden shadow-sm flex flex-col">
+                <div class="px-6 py-4 border-b border-slate-200/40 bg-gradient-to-r from-slate-50/50 to-transparent">
+                    <h2 class="font-semibold text-slate-900 flex items-center gap-2.5">
+                        <i class="fas fa-clock text-blue-600"></i>
+                        Aktivitas Terbaru
+                    </h2>
                 </div>
 
-                <div class="max-h-[30rem] space-y-1 overflow-y-auto p-4">
+                <div class="flex-1 overflow-y-auto divide-y divide-slate-200/40">
                     @forelse ($activities as $activity)
-                        <article class="rounded-2xl px-4 py-3 transition hover:bg-slate-50">
-                            <div class="flex gap-3">
-                                <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                    <i class="fas fa-bolt text-xs"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-sm leading-6 text-slate-700">
-                                        <span class="font-semibold text-slate-950">{{ $activity->causer->name ?? 'Sistem' }}</span>
-                                        <span class="text-slate-500">{{ $activity->description }}</span>
+                        <div class="px-6 py-3 hover:bg-slate-50/50 transition-colors duration-200">
+                            <div class="flex items-start gap-3">
+                                <div class="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-medium text-slate-900">
+                                        <span class="font-semibold text-blue-600">{{ $activity->causer->name ?? 'Sistem' }}</span>
+                                        <span class="text-slate-600">{{ $activity->description }}</span>
                                     </p>
-                                    <p class="mt-1 text-xs text-slate-400">{{ $activity->created_at->diffForHumans() }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        {{ $activity->created_at->diffForHumans() }}
+                                    </p>
                                 </div>
                             </div>
-                        </article>
+                        </div>
                     @empty
-                        <div class="px-4 py-14 text-center">
-                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                                <i class="fas fa-clock-rotate-left"></i>
-                            </div>
-                            <p class="mt-3 text-sm font-medium text-slate-900">Belum ada aktivitas.</p>
-                            <p class="mt-1 text-sm text-slate-500">Interaksi terbaru akan muncul di sini.</p>
+                        <div class="px-6 py-8 text-center text-slate-500 flex-1 flex items-center justify-center">
+                            <p class="text-sm">Belum ada aktivitas</p>
                         </div>
                     @endforelse
                 </div>
             </aside>
-        </section>
+        </div>
     </div>
 </x-app-layout>

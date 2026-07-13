@@ -24,10 +24,10 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="font-sans antialiased bg-slate-50/50 text-slate-900">
+<body class="font-sans antialiased bg-slate-50 text-slate-900">
     <div class="min-h-screen flex flex-col">
 
-        <nav x-data="{ open: false }" class="sticky top-0 z-50 bg-white/75 backdrop-blur-xl border-b border-slate-200/70">
+        <nav x-data="{ open: false }" class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
 
@@ -41,7 +41,7 @@
                             </span>
                         </a>
 
-                        <div class="hidden md:flex items-center gap-1 bg-slate-100/70 p-1 rounded-2xl">
+                        <div class="hidden md:flex items-center gap-1 bg-slate-100/60 p-1 rounded-xl border border-slate-200/60">
                             @php
                                 $navItems = [
                                     ['route' => 'dashboard', 'active' => 'dashboard', 'icon' => 'fa-gauge-high', 'label' => 'Dashboard'],
@@ -50,8 +50,8 @@
                             @endphp
                             @foreach($navItems as $item)
                             <a href="{{ route($item['route']) }}"
-                               class="relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
-                               {{ request()->routeIs($item['active']) ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900' }}">
+                               class="relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                               {{ request()->routeIs($item['active']) ? 'bg-white text-blue-600 shadow-sm border border-slate-200/40' : 'text-slate-600 hover:text-slate-900' }}">
                                 <i class="fas {{ $item['icon'] }} text-sm {{ request()->routeIs($item['active']) ? 'text-blue-500' : 'text-slate-400' }}"></i>
                                 {{ $item['label'] }}
                             </a>
@@ -59,8 +59,8 @@
 
                             @if(auth()->user() && auth()->user()->role === 'admin')
                             <a href="{{ route('users.index') }}"
-                               class="relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
-                               {{ request()->routeIs('users.index*') ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900' }}">
+                               class="relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                               {{ request()->routeIs('users.index*') ? 'bg-white text-blue-600 shadow-sm border border-slate-200/40' : 'text-slate-600 hover:text-slate-900' }}">
                                 <i class="fas fa-users-gear text-sm {{ request()->routeIs('users.index*') ? 'text-blue-500' : 'text-slate-400' }}"></i>
                                 Manajemen User
                             </a>
@@ -68,16 +68,16 @@
                         </div>
                     </div>
 
-                    <div class="hidden md:flex items-center gap-3">
+                    <div class="hidden md:flex items-center gap-4">
                         <a href="{{ route('garansi.create') }}"
-                           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
-                            <i class="fas fa-plus text-xs"></i> Buat Garansi
+                           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 active:scale-95 transition-all duration-200">
+                            <i class="fas fa-plus text-xs"></i> <span>Tambah Data</span>
                         </a>
 
-                        <div class="relative border-l border-slate-200 pl-3 h-8 flex items-center">
+                        <div class="relative border-l border-slate-200/40 pl-4 h-8 flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <button class="inline-flex items-center gap-2 pl-1 pr-2.5 py-1.5 text-sm font-medium rounded-full text-slate-600 hover:bg-slate-100 focus:outline-none transition-colors duration-200">
+                                    <button class="inline-flex items-center gap-2 pl-1 pr-2.5 py-1.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100/60 focus:outline-none transition-colors duration-200">
                                         <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-full flex items-center justify-center font-semibold text-xs shadow-sm">
                                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                         </div>
@@ -104,7 +104,7 @@
                     </div>
 
                     <div class="-me-2 flex items-center md:hidden">
-                        <button @click="open = ! open" class="inline-flex items-center justify-center w-10 h-10 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:outline-none transition-colors duration-150">
+                        <button @click="open = ! open" class="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 focus:outline-none transition-colors duration-150">
                             <svg class="h-5 w-5" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                 <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                 <path x-show="open" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -124,32 +124,32 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 -translate-y-2"
-                 class="md:hidden border-t border-slate-100 bg-white shadow-xl">
+                 class="md:hidden border-t border-slate-100/50 bg-white shadow-xl">
                 <div class="pt-3 pb-3 space-y-1 px-3">
                     <a href="{{ route('dashboard') }}"
-                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-medium {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-base font-medium {{ request()->routeIs('dashboard') ? 'bg-blue-50/80 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
                         <i class="fas fa-gauge-high w-5 text-center"></i> Dashboard
                     </a>
                     <a href="{{ route('garansi.index') }}"
-                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-medium {{ request()->routeIs('garansi.index*') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-base font-medium {{ request()->routeIs('garansi.index*') ? 'bg-blue-50/80 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
                         <i class="fas fa-list-check w-5 text-center"></i> Data Garansi
                     </a>
                     @if(auth()->user() && auth()->user()->role === 'admin')
                     <a href="{{ route('users.index') }}"
-                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-medium {{ request()->routeIs('users.index*') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-base font-medium {{ request()->routeIs('users.index*') ? 'bg-blue-50/80 text-blue-600' : 'text-slate-600 hover:bg-slate-50' }}">
                         <i class="fas fa-users-gear w-5 text-center"></i> Manajemen User
                     </a>
                     @endif
 
                     <div class="pt-2 border-t border-slate-100 my-2">
                         <a href="{{ route('garansi.create') }}"
-                           class="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-base font-medium shadow-sm">
-                            <i class="fas fa-plus"></i> Buat Garansi
+                           class="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-base font-medium shadow-lg shadow-blue-600/20">
+                            <i class="fas fa-plus"></i> Tambah Data
                         </a>
                     </div>
                 </div>
 
-                <div class="pt-4 pb-4 border-t border-slate-100 bg-slate-50/60 px-4">
+                <div class="pt-4 pb-4 border-t border-slate-100/50 bg-slate-50/60 px-4">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm">
                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -161,12 +161,12 @@
                     </div>
 
                     <div class="space-y-1">
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 text-sm">
+                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100/60 text-sm">
                             <i class="fas fa-id-card text-slate-400"></i> Profile
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" class="flex items-center gap-3 px-3 py-2 text-red-600 rounded-lg hover:bg-red-50 text-sm">
+                            <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" class="flex items-center gap-3 px-3 py-2 text-red-600 rounded-lg hover:bg-red-50/60 text-sm">
                                 <i class="fas fa-sign-out-alt text-red-400"></i> Log Out
                             </a>
                         </form>
@@ -184,9 +184,9 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="fixed top-20 right-4 sm:right-6 z-[60] max-w-sm w-full">
-            <div class="bg-white border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 shadow-xl shadow-emerald-500/10">
-                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
-                    <i class="fas fa-check text-sm"></i>
+            <div class="bg-white border border-emerald-200/60 rounded-xl p-4 flex items-center gap-3 shadow-lg shadow-emerald-500/10">
+                <div class="w-9 h-9 rounded-lg bg-emerald-50/80 text-emerald-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-check text-sm font-semibold"></i>
                 </div>
                 <span class="font-medium text-sm text-slate-800 flex-1">{{ session('success') }}</span>
                 <button @click="show = false" class="text-slate-300 hover:text-slate-500 transition-colors">
@@ -205,9 +205,9 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="fixed top-20 right-4 sm:right-6 z-[60] max-w-sm w-full">
-            <div class="bg-white border border-rose-200 rounded-2xl p-4 flex items-center gap-3 shadow-xl shadow-rose-500/10">
-                <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                    <i class="fas fa-exclamation text-sm"></i>
+            <div class="bg-white border border-rose-200/60 rounded-xl p-4 flex items-center gap-3 shadow-lg shadow-rose-500/10">
+                <div class="w-9 h-9 rounded-lg bg-rose-50/80 text-rose-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-exclamation text-sm font-semibold"></i>
                 </div>
                 <span class="font-medium text-sm text-slate-800 flex-1">{{ session('error') }}</span>
                 <button @click="show = false" class="text-slate-300 hover:text-slate-500 transition-colors">
@@ -217,7 +217,7 @@
         </div>
         @endif
 
-        <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex-1">
+        <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
             @yield('content', $slot ?? '')
         </main>
 
@@ -242,19 +242,19 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 scale-100"
                      x-transition:leave-end="opacity-0 scale-95"
-                     class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
+                     class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-rose-50/80 text-rose-600 flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-trash-can text-xl"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-900 tracking-tight">Konfirmasi Hapus</h3>
-                    <p class="text-sm text-slate-500 mt-1.5" x-text="message"></p>
+                    <p class="text-sm text-slate-600 mt-2" x-text="message"></p>
                     <div class="flex gap-3 mt-6">
                         <button type="button" @click="open = false"
-                            class="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+                            class="flex-1 bg-white border border-slate-200/60 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200">
                             Batal
                         </button>
                         <button type="button" @click="open = false; form && form.submit()"
-                            class="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-rose-500/20 transition-colors">
+                            class="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg shadow-rose-600/20 transition-colors duration-200">
                             Ya, Hapus
                         </button>
                     </div>
