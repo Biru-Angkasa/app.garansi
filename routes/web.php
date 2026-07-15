@@ -6,20 +6,29 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
 
 
+// ========== ROUTE PUBLIC (TIDAK PERLU LOGIN) ==========
+// Root "/" - Login Page (jika belum login) atau redirect ke Dashboard (jika sudah login)
 Route::get('/', function () {
     if (auth()->check()) {
-        return app(DashboardController::class)->index();
+        return redirect()->route('dashboard');
     }
-    return view('welcome');
-})->name('dashboard');
+    return redirect()->route('login');
+})->name('home');
 
+// Cek Garansi (Public - tanpa login)
+Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
+
+// ========== ROUTE AUTH (PERLU LOGIN) ==========
 Route::middleware('auth')->group(function () {
-    // Route Profile Breeze
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Profile
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Route Garansi
+    // Garansi
     Route::prefix('garansi')->name('garansi.')->group(function () {
         Route::get('/', [GaransiController::class, 'index'])->name('index');
         Route::get('/create', [GaransiController::class, 'create'])->name('create');
@@ -35,7 +44,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{garansi}/resend-wa/{log}', [GaransiController::class, 'resendWA'])->name('resend-wa');
     });
 
-    // Route Manajemen User (Khusus Admin)
+    // Manajemen User (Admin Only)
     Route::middleware(['role:admin'])->prefix('users')->name('users.')->group(function () {
         Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
@@ -46,6 +55,5 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
 
 require __DIR__.'/auth.php';
