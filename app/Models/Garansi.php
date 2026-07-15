@@ -78,4 +78,13 @@ class Garansi extends Model
             default           => 'bg-gray-100 text-gray-800',
         };
     }
+    public function chats()
+    {
+        return $this->hasMany(GaransiChat::class)->latest();
+    }
+
+    public function unreadChatsCount()
+    {
+        return $this->chats()->where('is_read', false)->count();
+    }
 }

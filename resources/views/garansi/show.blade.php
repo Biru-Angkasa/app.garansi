@@ -1120,6 +1120,7 @@
         </form>
     </div>
 </div>
+@include('bublechat')
 @endsection
 
 @push('scripts')

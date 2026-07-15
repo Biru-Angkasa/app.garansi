@@ -325,6 +325,7 @@
         @endif
     </div>
 </div>
+@include('bublechat')
 
 {{-- Delete Confirmation Modal --}}
 <script>

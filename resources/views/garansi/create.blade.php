@@ -156,6 +156,8 @@
         </div>
     </form>
 </div>
+@include('bublechat')
+
 @endsection
 
 @push('scripts')

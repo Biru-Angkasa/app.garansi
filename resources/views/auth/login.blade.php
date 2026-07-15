@@ -80,14 +80,14 @@
                 <span>{{ __('Ingat saya') }}</span>
             </label>
 
-            @if (Route::has('password.request'))
+            <!-- @if (Route::has('password.request'))
                 <a
                     class="text-sm font-medium text-blue-600 transition hover:text-blue-700"
                     href="{{ route('password.request') }}"
                 >
                     {{ __('Lupa password?') }}
                 </a>
-            @endif
+            @endif -->
         </div>
 
         <x-primary-button class="w-full justify-center rounded-2xl py-3.5 text-[15px] font-semibold shadow-lg shadow-blue-600/20">
@@ -95,23 +95,24 @@
             {{ __('Masuk') }}
         </x-primary-button>
 
-        @if (Route::has('register'))
+        <!-- @if (Route::has('register'))
             <p class="text-center text-sm text-slate-500">
                 {{ __('Belum punya akun?') }}
                 <a class="font-semibold text-blue-600 transition hover:text-blue-700" href="{{ route('register') }}">
                     {{ __('Daftar di sini') }}
                 </a>
             </p>
-        @endif
+        @endif -->
     </form>
 
     @if (Route::has('tracking.index'))
-        <div class="mt-8">
-            <div class="mb-3 flex items-center gap-2">
-                <span class="h-px flex-1 bg-slate-200"></span>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">atau</span>
-                <span class="h-px flex-1 bg-slate-200"></span>
-            </div>
+        <div class="relative my-8 flex items-center justify-center">
+            <div class="absolute left-0 right-0 h-px bg-slate-200"></div>
+
+            <span class="relative rounded-full border border-slate-200 bg-white px-5 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500 shadow-sm">
+                atau
+            </span>
+        </div>
 
             <a
                 href="{{ route('tracking.index') }}"

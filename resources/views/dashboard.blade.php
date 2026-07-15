@@ -323,4 +323,5 @@
             </aside>
         </section>
     </div>
+    @include('bublechat')
 </x-app-layout>

@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GaransiController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GaransiChatController;
 use App\Http\Controllers\TrackingController;
-
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 // ========== ROUTE PUBLIC (TIDAK PERLU LOGIN) ==========
+
 // Root "/" - Login Page (jika belum login) atau redirect ke Dashboard (jika sudah login)
 Route::get('/', function () {
     if (auth()->check()) {
@@ -18,16 +21,25 @@ Route::get('/', function () {
 // Cek Garansi (Public - tanpa login)
 Route::get('/cek-garansi', [TrackingController::class, 'index'])->name('tracking.index');
 
+// Chat publik untuk customer di halaman cek garansi (tanpa login)
+Route::get('/tracking/{garansi}/chat', [GaransiChatController::class, 'indexPublic'])->name('tracking.chat.index');
+Route::post('/tracking/{garansi}/chat', [GaransiChatController::class, 'storeFromCustomer'])->name('tracking.chat.store');
+
+
 // ========== ROUTE AUTH (PERLU LOGIN) ==========
 Route::middleware('auth')->group(function () {
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
+    // Floating chat bubble (list garansi yang punya percakapan aktif)
+    Route::get('/chats/active', [GaransiChatController::class, 'active'])->name('garansi.chat.active');
+
     // Profile
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     // Garansi
     Route::prefix('garansi')->name('garansi.')->group(function () {
         Route::get('/', [GaransiController::class, 'index'])->name('index');
@@ -42,18 +54,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/{garansi}/send-wa', [GaransiController::class, 'sendWA'])->name('send-wa');
         Route::post('/scrape-invoice', [GaransiController::class, 'scrapeInvoice'])->name('scrape-invoice');
         Route::post('/{garansi}/resend-wa/{log}', [GaransiController::class, 'resendWA'])->name('resend-wa');
+
+        // Chat teknisi (perlu login)
+        Route::prefix('{garansi}/chat')->name('chat.')->group(function () {
+            Route::get('/', [GaransiChatController::class, 'index'])->name('index');
+            Route::post('/', [GaransiChatController::class, 'store'])->name('store');
+        });
     });
 
     // Manajemen User (Admin Only)
     Route::middleware(['role:admin'])->prefix('users')->name('users.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store');
-        Route::get('/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('edit');
-        Route::put('/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/create', [UserController::class, 'create'])->name('create');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 });
-
 
 require __DIR__.'/auth.php';
