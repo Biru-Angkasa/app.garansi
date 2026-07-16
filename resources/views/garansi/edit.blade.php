@@ -62,17 +62,33 @@
                 <i class="fas fa-receipt text-blue-500"></i> Detail Pembelian
             </h2>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Invoice Pembelian</label>
-                <div class="flex gap-2">
-                    <input type="text" name="invoice_pembelian" id="invoice_pembelian" value="{{ old('invoice_pembelian', $garansi->invoice_pembelian) }}"
-                        class="flex-1 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    <button type="button" id="btn-scrape-invoice"
-                        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors">
-                        <i class="fas fa-magnifying-glass"></i> Scrape
-                    </button>
+            {{-- Scrape Data Odoo --}}
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <label class="block text-sm font-semibold text-slate-700">Tarik Data Otomatis (Scrape Odoo)</label>
+                <div class="flex flex-col md:flex-row gap-3">
+                    <div class="w-full md:w-1/4">
+                        <select id="odoo-instance" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-violet-500 bg-white outline-none">
+                            <option value="">-- Pilih Cabang Odoo --</option>
+                            @foreach(config('odoo.instances') as $key => $instance)
+                            <option value="{{ $key }}">{{ $instance['nama'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="flex-1 flex gap-2">
+                        <input type="text" name="invoice_pembelian" id="invoice_pembelian" value="{{ old('invoice_pembelian', $garansi->invoice_pembelian) }}" placeholder="No. Invoice..." class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="button" id="btn-scrape-invoice" class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"><i class="fas fa-search"></i> Scrape Invoice</button>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center text-slate-400 text-xs font-medium uppercase">Atau</div>
+
+                    <div class="flex-1 flex gap-2">
+                        <input type="text" id="search_sn" placeholder="No. Serial Number..." class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="button" id="btn-scrape-sn" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"><i class="fas fa-barcode"></i> Scrape SN</button>
+                    </div>
                 </div>
-                <p id="scrape-result" class="text-xs mt-1.5 hidden"></p>
+                <p id="scrape-result" class="text-xs hidden mt-2"></p>
+                @error('invoice_pembelian') <p class="text-rose-500 text-xs mt-1.5">{{ $message }}</p> @enderror
             </div>
 
             {{-- Items --}}
@@ -181,29 +197,154 @@
     addItem('{{ addslashes($oldItem['nama_barang'] ?? '') }}', '{{ addslashes($oldItem['serial_number'] ?? '') }}', {{ $oldItem['id'] ?? 'null' }});
     @endforeach
 
-    // Invoice Scrape (same as create)
+    // ========== Invoice Scraping dari Odoo ERP ==========
     document.getElementById('btn-scrape-invoice')?.addEventListener('click', function() {
         const invoiceNumber = document.getElementById('invoice_pembelian').value.trim();
+        const odooInstance = document.getElementById('odoo-instance').value;
+
         if (!invoiceNumber) { alert('Masukkan Invoice Pembelian terlebih dahulu.'); return; }
+        if (!odooInstance) { alert('Pilih instance Odoo terlebih dahulu.'); return; }
+
         const btn = this;
         const resultEl = document.getElementById('scrape-result');
+        const originalHTML = btn.innerHTML;
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
         resultEl.classList.remove('hidden');
         resultEl.className = 'text-xs mt-1.5 text-slate-500';
-        resultEl.textContent = 'Sedang scraping...';
+        resultEl.textContent = 'Sedang scraping data dari Odoo...';
+
         fetch('{{ route("garansi.scrape-invoice") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-            body: JSON.stringify({ invoice_pembelian: invoiceNumber })
+            body: JSON.stringify({
+                invoice_pembelian: invoiceNumber,
+                odoo_instance: odooInstance,
+            })
         })
         .then(r => r.json())
         .then(data => {
-            resultEl.className = 'text-xs mt-1.5 ' + (data.success ? 'text-emerald-600' : 'text-amber-600');
-            resultEl.textContent = (data.success ? '✓ ' : '⚠ ') + data.message;
+            if (data.success && data.data) {
+                resultEl.className = 'text-xs mt-1.5 text-emerald-600';
+                resultEl.textContent = '✓ ' + data.message;
+
+                // Auto-fill items
+                if (data.data.items && data.data.items.length > 0) {
+                    document.getElementById('items-container').innerHTML = '';
+                    itemIndex = 0;
+                    data.data.items.forEach(item => {
+                        addItem(item.nama_barang || '', item.serial_number || '');
+                    });
+                }
+
+                // Auto-fill tanggal beli
+                if (data.data.tanggal_beli) {
+                    document.querySelector('input[name="tanggal_beli"]').value = data.data.tanggal_beli;
+                }
+
+                // Auto-fill marketplace
+                if (data.data.nama_marketplace) {
+                    document.querySelector('input[name="nama_marketplace"]').value = data.data.nama_marketplace;
+                }
+            } else {
+                resultEl.className = 'text-xs mt-1.5 text-amber-600';
+                resultEl.textContent = '⚠ ' + (data.message || 'Data tidak ditemukan.');
+            }
         })
-        .catch(e => { resultEl.textContent = 'Error: ' + e.message; })
-        .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Scrape'; });
+        .catch(e => {
+            resultEl.className = 'text-xs mt-1.5 text-rose-500';
+            resultEl.textContent = 'Error: ' + e.message;
+        })
+        .finally(() => { btn.disabled = false; btn.innerHTML = originalHTML; });
+    });
+
+    // ========== SN Scraping dari Odoo ERP ==========
+    document.getElementById('btn-scrape-sn').addEventListener('click', function() {
+        const serialNumber = document.getElementById('search_sn').value.trim();
+        const odooInstance = document.getElementById('odoo-instance').value;
+
+        if (!serialNumber) {
+            alert('Masukkan Serial Number (SN) terlebih dahulu.');
+            return;
+        }
+        if (!odooInstance) {
+            alert('Pilih cabang Odoo terlebih dahulu.');
+            return;
+        }
+
+        const btn = this;
+        const resultEl = document.getElementById('scrape-result');
+        const originalHTML = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+        resultEl.className = 'text-xs mt-1.5 text-slate-500';
+        resultEl.textContent = 'Mencari SN di Odoo...';
+        resultEl.classList.remove('hidden');
+
+        fetch('{{ route("garansi.scrape-sn") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                serial_number: serialNumber,
+                odoo_instance: odooInstance
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+
+            if (!data.success && data.error) {
+                resultEl.textContent = data.error;
+                resultEl.className = 'text-xs mt-1.5 text-rose-500';
+                alert(data.error);
+                return;
+            }
+            if (!data.success) {
+                resultEl.textContent = data.message || 'Gagal menarik data dari Odoo.';
+                resultEl.className = 'text-xs mt-1.5 text-rose-500';
+                return;
+            }
+
+            resultEl.textContent = data.message;
+            resultEl.className = 'text-xs mt-1.5 text-emerald-600';
+
+            // Auto fill data
+            const order = data.data;
+            if (order.invoice_or_order_number) {
+                document.getElementById('invoice_pembelian').value = order.invoice_or_order_number;
+            }
+            if (order.date_order) {
+                const dateOnly = order.date_order.split(' ')[0];
+                document.querySelector('input[name="tanggal_beli"]').value = dateOnly;
+            }
+            if (order.marketplace_name) {
+                document.querySelector('input[name="nama_marketplace"]').value = order.marketplace_name;
+            }
+
+            // Auto fill items
+            if (order.items && order.items.length > 0) {
+                document.getElementById('items-container').innerHTML = '';
+                itemIndex = 0;
+                
+                order.items.forEach(item => {
+                    addItem(item.nama_barang, item.serial_number);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            resultEl.textContent = 'Terjadi kesalahan sistem saat menghubungi Odoo.';
+            resultEl.className = 'text-xs mt-1.5 text-rose-500';
+        });
     });
 </script>
 @endpush

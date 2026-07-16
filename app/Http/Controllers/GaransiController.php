@@ -305,23 +305,84 @@ class GaransiController extends Controller
     }
 
     /**
-     * Scraping Invoice Pembelian
+     * Scraping Invoice Pembelian dari Odoo ERP
      */
     public function scrapeInvoice(Request $request)
     {
         $request->validate([
             'invoice_pembelian' => ['required', 'string'],
+            'odoo_instance'     => ['required', 'string', Rule::in(array_keys(config('odoo.instances')))],
         ]);
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Logic scraping belum diimplementassi. Akan dibuat nanti.',
-            'invoice_pembelian' => $request->invoice_pembelian,
-        ]);
+        try {
+            $odooService = app(\App\Services\OdooService::class);
+            $result = $odooService->scrapeByInvoice(
+                $request->odoo_instance,
+                $request->invoice_pembelian
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data ditemukan dari ' . config("odoo.instances.{$request->odoo_instance}.nama") . '!',
+                'data'    => $result,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Scrape invoice gagal: ' . $e->getMessage(), [
+                'invoice' => $request->invoice_pembelian,
+                'odoo'    => $request->odoo_instance,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
-     * Kirim ulang pesan WhatsApp berdasarkan Log
+     * Scraping data berdasarkan Serial Number (SN) dari Odoo ERP
+     */
+    public function scrapeSN(Request $request)
+    {
+        $request->validate([
+            'serial_number' => ['required', 'string'],
+            'odoo_instance' => ['required', 'string', Rule::in(array_keys(config('odoo.instances')))],
+        ]);
+
+        try {
+            $odooService = app(\App\Services\OdooService::class);
+            $result = $odooService->scrapeBySN(
+                $request->odoo_instance,
+                $request->serial_number
+            );
+
+            if (!$result) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SN tidak ditemukan di ' . config("odoo.instances.{$request->odoo_instance}.nama")
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data ditemukan dari ' . config("odoo.instances.{$request->odoo_instance}.nama") . '!',
+                'data'    => $result,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Scrape SN gagal: ' . $e->getMessage(), [
+                'sn'   => $request->serial_number,
+                'odoo' => $request->odoo_instance,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Resend WhatsApp Messagen WhatsApp berdasarkan Log
      */
     public function resendWA(Request $request, Garansi $garansi, $logId)
     {
