@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('{garansi}/chat')->name('chat.')->group(function () {
             Route::get('/', [GaransiChatController::class, 'index'])->name('index');
             Route::post('/', [GaransiChatController::class, 'store'])->name('store');
+            Route::delete('/', [GaransiChatController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         });
     });
 

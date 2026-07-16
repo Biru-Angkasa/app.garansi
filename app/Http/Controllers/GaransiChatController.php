@@ -61,6 +61,7 @@ class GaransiChatController extends Controller
         return response()->json(
             $garansis->map(function ($g) {
                 $last = $g->chats()->latest()->first();
+
                 return [
                     'id'              => $g->id,
                     'nama'            => $g->nama,
@@ -71,5 +72,15 @@ class GaransiChatController extends Controller
             })->sortByDesc('last_message_at')->values()
         );
     }
-    
+
+    // hapus seluruh history chat (admin only)
+    public function destroy(Garansi $garansi)
+    {
+        $deleted = $garansi->chats()->delete();
+
+        return response()->json([
+            'message' => 'History chat berhasil dihapus.',
+            'deleted' => $deleted,
+        ]);
+    }
 }
