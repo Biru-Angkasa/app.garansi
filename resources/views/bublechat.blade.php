@@ -1,13 +1,21 @@
 <div
     x-data="floatingChats()"
     x-init="init()"
-    class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
-    style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif;"
+    class="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[60]"
+    :class="!isDragging ? 'transition-transform duration-300' : ''"
+    :style="`transform: translate(${posX}px, ${posY}px); font-family: 'Segoe UI', Helvetica, Arial, sans-serif;`"
+    @mousemove.window="onDrag($event)"
+    @mouseup.window="stopDrag($event)"
+    @touchmove.window="onDrag($event)"
+    @touchend.window="stopDrag($event)"
+    @resize.window="checkAlignment()"
 >
-    {{-- ===================== CHAT WINDOW ===================== --}}
+    <div class="relative flex flex-col items-end">
+        {{-- ===================== CHAT WINDOW ===================== --}}
     <template x-if="activeChat">
         <div
-            class="w-[360px] h-[580px] overflow-hidden rounded-xl shadow-[0_8px_30px_rgba(0,0,0,.22)] flex flex-col relative"
+            class="absolute w-[360px] max-w-[calc(100vw-2rem)] h-[580px] max-h-[80vh] overflow-hidden rounded-xl shadow-[0_8px_30px_rgba(0,0,0,.22)] flex flex-col"
+            :class="[isLeftAligned ? 'left-0' : 'right-0', isTopAligned ? 'top-full mt-3 origin-top' : 'bottom-full mb-3 origin-bottom']"
             style="background:#fff;"
             @click.outside="showEmoji = false"
         >
@@ -172,7 +180,8 @@
     {{-- ===================== LIST CHAT ===================== --}}
     <template x-if="listOpen && !activeChat">
         <div
-            class="w-[360px] max-h-[600px] overflow-hidden rounded-xl shadow-[0_8px_30px_rgba(0,0,0,.22)] flex flex-col"
+            class="absolute w-[360px] max-w-[calc(100vw-2rem)] max-h-[600px] h-[80vh] overflow-hidden rounded-xl shadow-[0_8px_30px_rgba(0,0,0,.22)] flex flex-col"
+            :class="[isLeftAligned ? 'left-0' : 'right-0', isTopAligned ? 'top-full mt-3 origin-top' : 'bottom-full mb-3 origin-bottom']"
             style="background:#fff;"
         >
             <div
@@ -289,8 +298,12 @@
 
     {{-- ===================== FLOATING BUTTON ===================== --}}
     <button
-        @click="listOpen = !listOpen; if (!listOpen) closeAll()"
-        class="relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_4px_14px_rgba(0,168,132,.45)] transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95"
+        x-ref="bubbleBtn"
+        @mousedown="startDrag($event)"
+        @touchstart="startDrag($event)"
+        @click="if (!hasDragged) { listOpen = !listOpen; if (!listOpen) closeAll() }"
+        class="relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_4px_14px_rgba(0,168,132,.45)] hover:scale-105 hover:brightness-110 active:scale-95"
+        :class="isDragging ? 'cursor-grabbing scale-105 brightness-110' : 'cursor-grab transition-all duration-200'"
         style="background:#25D366;"
         aria-label="Buka chat"
     >
@@ -304,6 +317,7 @@
             style="background:#ea4335;"
         ></span>
     </button>
+    </div>
 </div>
 
 <script>
@@ -325,8 +339,20 @@ function floatingChats() {
             '❤️','✨','🎉','✅','❌','⭐','💪','🤝',
             '📷','📱','💻','🛠️','📦','🚚','💬','👋'
         ],
+        isDragging: false,
+        hasDragged: false,
+        isLeftAligned: false,
+        isTopAligned: false,
+        startX: 0,
+        startY: 0,
+        posX: 0,
+        posY: 0,
 
         init() {
+            this.posX = parseFloat(localStorage.getItem('bubblePosX')) || 0;
+            this.posY = parseFloat(localStorage.getItem('bubblePosY')) || 0;
+            this.$nextTick(() => this.checkAlignment());
+            
             this.dismissed = JSON.parse(
                 localStorage.getItem('dismissedChats') || '{}'
             );
@@ -337,6 +363,51 @@ function floatingChats() {
                     this.loadMessages(false);
                 }
             }, 3000);
+        },
+        
+        startDrag(e) {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            this.isDragging = true;
+            this.hasDragged = false;
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            this.startX = clientX - this.posX;
+            this.startY = clientY - this.posY;
+        },
+        
+        onDrag(e) {
+            if (!this.isDragging) return;
+            e.preventDefault();
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            let newPosX = clientX - this.startX;
+            let newPosY = clientY - this.startY;
+            
+            if (Math.abs(newPosX - this.posX) > 3 || Math.abs(newPosY - this.posY) > 3) {
+                this.hasDragged = true;
+            }
+            this.posX = newPosX;
+            this.posY = newPosY;
+            this.checkAlignment();
+        },
+        
+        checkAlignment() {
+            if (this.$refs.bubbleBtn) {
+                let rect = this.$refs.bubbleBtn.getBoundingClientRect();
+                let centerX = rect.left + rect.width / 2;
+                let centerY = rect.top + rect.height / 2;
+                this.isLeftAligned = centerX < window.innerWidth / 2;
+                this.isTopAligned = centerY < window.innerHeight / 2;
+            }
+        },
+        
+        stopDrag(e) {
+            if (!this.isDragging) return;
+            this.isDragging = false;
+            if (this.hasDragged) {
+                localStorage.setItem('bubblePosX', this.posX);
+                localStorage.setItem('bubblePosY', this.posY);
+            }
         },
 
         get visibleChats() {

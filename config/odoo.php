@@ -18,17 +18,17 @@ return [
         'jakarta' => [
             'nama' => 'Odoo Jakarta',
             'url'  => env('ODOO_JKT_URL', 'https://ojkt.erpsyst.com'),
-            'db'   => env('ODOO_JKT_DB', 'ojkt'),
+            'db'   => env('ODOO_JKT_DB', '20210104-EDCCOMP-Live'),
         ],
         'surabaya' => [
             'nama' => 'Odoo Surabaya',
             'url'  => env('ODOO_SBY_URL', 'https://osby.erpsyst.com'),
-            'db'   => env('ODOO_SBY_DB', 'osby'),
+            'db'   => env('ODOO_SBY_DB', 'Surabaya'),
         ],
         'makassar' => [
             'nama' => 'Odoo Makassar',
             'url'  => env('ODOO_MKS_URL', 'https://omks.erpsyst.com'),
-            'db'   => env('ODOO_MKS_DB', 'omks'),
+            'db'   => env('ODOO_MKS_DB', 'Makassar'),
         ],
     ],
 ];

@@ -29,7 +29,7 @@
         </div>
 
         {{-- Keterangan Warna --}}
-        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center gap-6 text-xs text-slate-600">
+        <div class="mt-6 pt-5 border-t border-slate-100 flex overflow-x-auto md:flex-wrap items-center gap-6 text-xs text-slate-600 pb-2">
             <div class="flex items-center gap-2.5">
                 <div class="flex-shrink-0 h-2 w-2 rounded-full bg-amber-500"></div>
                 <span class="font-medium">Diam 1-2 hari</span>
@@ -142,7 +142,7 @@
         </div>
 
         {{-- Responsive Table --}}
-        <div class="overflow-hidden">
+        <div class="overflow-x-auto">
             {{--
                 NOTE: border-collapse is required here. Without it, a border-left
                 applied to individual <td> cells can render with visual gaps
@@ -325,7 +325,6 @@
         @endif
     </div>
 </div>
-@include('bublechat')
 
 {{-- Delete Confirmation Modal --}}
 <script>

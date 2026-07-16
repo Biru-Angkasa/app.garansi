@@ -80,7 +80,7 @@
                         <button type="button" id="btn-scrape-invoice" class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"><i class="fas fa-search"></i> Scrape Invoice</button>
                     </div>
                     
-                    <div class="hidden md:flex items-center text-slate-400 text-xs font-medium uppercase">Atau</div>
+                    <div class="flex justify-center md:flex items-center text-slate-400 text-xs font-medium uppercase my-1 md:my-0">Atau</div>
 
                     <div class="flex-1 flex gap-2">
                         <input type="text" id="search_sn" placeholder="No. Serial Number..." class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
@@ -140,15 +140,14 @@
             </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-1">
-            <a href="{{ route('garansi.show', $garansi) }}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors">Batal</a>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1 mt-4">
+            <a href="{{ route('garansi.show', $garansi) }}" class="flex-1 sm:flex-none justify-center text-center bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors">Batal</a>
+            <button type="submit" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
                 <i class="fas fa-save"></i> Update Data
             </button>
         </div>
     </form>
 </div>
-@include('bublechat')
 @endsection
 
 @push('scripts')
@@ -158,7 +157,7 @@
     function addItem(namaBarang = '', serialNumber = '', id = null) {
         const container = document.getElementById('items-container');
         const row = document.createElement('div');
-        row.className = 'flex gap-2 items-start';
+        row.className = 'flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full relative bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl border border-slate-100 sm:border-none';
 
         let idInput = '';
         if (id) {
@@ -167,15 +166,15 @@
 
         row.innerHTML = `
             ${idInput}
-            <div class="flex-1">
+            <div class="flex-1 w-full">
                 <input type="text" name="items[${itemIndex}][nama_barang]" value="${namaBarang}" placeholder="Nama Barang"
                     class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
             </div>
-            <div class="flex-1">
+            <div class="flex-1 w-full">
                 <input type="text" name="items[${itemIndex}][serial_number]" value="${serialNumber}" placeholder="Serial Number (SN)"
                     class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
             </div>
-            <button type="button" onclick="removeItem(this)" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2.5 rounded-xl text-sm font-medium flex-shrink-0 transition-colors" title="Hapus">
+            <button type="button" onclick="removeItem(this)" class="absolute sm:static top-3 right-3 sm:top-auto sm:right-auto bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2.5 rounded-xl text-sm font-medium flex-shrink-0 transition-colors" title="Hapus">
                 <i class="fas fa-minus"></i>
             </button>
         `;

@@ -217,7 +217,7 @@
         </div>
         @endif
 
-        <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 pb-24 md:pb-8">
             @yield('content', $slot ?? '')
         </main>
 
@@ -262,12 +262,43 @@
             </div>
         </div>
 
+        {{-- Mobile Bottom Navigation --}}
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-center justify-around pb-safe pt-2 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 p-2 w-16 {{ request()->routeIs('dashboard') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                <i class="fas fa-house text-lg"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </a>
+            <a href="{{ route('garansi.index') }}" class="flex flex-col items-center gap-1 p-2 w-16 {{ request()->routeIs('garansi.index*') && !request()->routeIs('garansi.create') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                <i class="fas fa-list text-lg"></i>
+                <span class="text-[10px] font-medium">List</span>
+            </a>
+            <a href="{{ route('garansi.create') }}" class="relative -top-5 flex flex-col items-center group">
+                <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-plus text-xl"></i>
+                </div>
+            </a>
+            @if(auth()->user() && auth()->user()->role === 'admin')
+            <a href="{{ route('users.index') }}" class="flex flex-col items-center gap-1 p-2 w-16 {{ request()->routeIs('users.index*') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                <i class="fas fa-users-gear text-lg"></i>
+                <span class="text-[10px] font-medium">Users</span>
+            </a>
+            @else
+            <div class="w-16"></div> {{-- Empty space to balance --}}
+            @endif
+            <a href="{{ route('profile.edit') }}" class="flex flex-col items-center gap-1 p-2 w-16 {{ request()->routeIs('profile.edit') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                <i class="fas fa-user text-lg"></i>
+                <span class="text-[10px] font-medium">Akun</span>
+            </a>
+        </div>
+
     </div>
     <script>
         function confirmDelete(form, message) {
             window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { form: form, message: message } }));
         }
     </script>
+    
+    @include('bublechat')
     @stack('scripts')
 </body>
 </html>

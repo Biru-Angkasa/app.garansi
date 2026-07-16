@@ -616,11 +616,11 @@
             <i class="fas fa-chevron-right text-[10px]"></i>
             <span class="text-slate-600 font-medium">{{ $garansi->nama }}</span>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('garansi.edit', $garansi) }}" class="btn-interactive group bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+            <a href="{{ route('garansi.edit', $garansi) }}" class="flex-1 sm:flex-none justify-center btn-interactive group bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-300">
                 <i class="fas fa-edit group-hover:scale-110 transition-transform duration-300"></i> Edit
             </a>
-            <a href="{{ route('garansi.index') }}" class="btn-interactive group bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300">
+            <a href="{{ route('garansi.index') }}" class="flex-1 sm:flex-none justify-center btn-interactive group bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300">
                 <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform duration-300"></i> Kembali
             </a>
         </div>
@@ -1120,7 +1120,6 @@
         </form>
     </div>
 </div>
-@include('bublechat')
 @endsection
 
 @push('scripts')

@@ -283,6 +283,9 @@ class OdooService
 
             // Bersihkan nama produk (hilangkan deskripsi HTML panjang)
             $productName = strip_tags($productName);
+            
+            // Hapus prefix SKU seperti "[9000001271] " jika ada di awal string
+            $productName = preg_replace('/^\[.*?\]\s*/', '', $productName);
             if (strlen($productName) > 150) {
                 $productName = substr($productName, 0, 150);
             }

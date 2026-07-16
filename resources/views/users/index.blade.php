@@ -75,5 +75,4 @@
             </table>
         </div>
     </div>
-    @include('bublechat')
 </x-app-layout>
