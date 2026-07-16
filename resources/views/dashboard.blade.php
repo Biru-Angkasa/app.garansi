@@ -291,7 +291,17 @@
                             }
                         @endphp
 
-                        <article class="rounded-2xl px-4 py-3 transition hover:bg-slate-50">
+                        @php
+                            $routeUrl = ($activity->subject && method_exists($activity->subject, 'getAttribute')) 
+                                ? route('garansi.show', $activity->subject) 
+                                : '#';
+                        @endphp
+                        
+                        @if($routeUrl !== '#')
+                            <a href="{{ $routeUrl }}" class="block rounded-2xl px-4 py-3 transition hover:bg-slate-50 group">
+                        @else
+                            <article class="block rounded-2xl px-4 py-3 transition hover:bg-slate-50 group">
+                        @endif
                             <div class="flex gap-3">
                                 <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
                                     <i class="fas {{ $icon }} text-xs"></i>
@@ -302,14 +312,18 @@
                                         <span class="text-slate-500">{{ $description }}</span>
                                     </p>
                                     @if ($detail)
-                                        <p class="mt-1 truncate text-xs font-mono text-slate-500">
+                                        <p class="mt-1 truncate text-xs font-mono text-slate-500 group-hover:text-blue-600 transition-colors">
                                             {{ $detail }}
                                         </p>
                                     @endif
                                     <p class="mt-1 text-xs text-slate-400">{{ $activity->created_at->diffForHumans() }}</p>
                                 </div>
                             </div>
-                        </article>
+                        @if($routeUrl !== '#')
+                            </a>
+                        @else
+                            </article>
+                        @endif
                     @empty
                         <div class="px-4 py-14 text-center">
                             <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">

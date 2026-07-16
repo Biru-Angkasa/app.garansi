@@ -128,198 +128,200 @@
         </div>
     </div>
 
-    {{-- Table --}}
-    <div class="rounded-2xl border border-slate-200/40 bg-white shadow-sm overflow-hidden">
-        <div class="border-b border-slate-100/50 px-6 py-4 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-base font-semibold tracking-tight text-slate-950">Daftar Garansi</h2>
-                <p class="mt-1 text-sm text-slate-600">{{ $garansis->total() }} total data</p>
+    {{-- Card Grid --}}
+    <div>
+        <div class="flex items-center justify-between gap-4 mb-5">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h2 class="text-base font-semibold tracking-tight text-slate-950">Daftar Garansi</h2>
+                    <div class="mt-1 flex items-center gap-3">
+                        <p class="text-sm text-slate-600">{{ $garansis->total() }} total data</p>
+                        <div class="h-4 w-px bg-slate-300"></div>
+                        @php
+                            $totalProses = \App\Models\Garansi::where('status', '!=', 'selesai')->count();
+                            $totalSelesai = \App\Models\Garansi::where('status', 'selesai')->count();
+                        @endphp
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            {{ $totalProses }} Proses
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/50">
+                            <i class="fas fa-check-circle text-[10px]"></i>
+                            {{ $totalSelesai }} Selesai
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="hidden sm:flex items-center gap-2.5 text-xs font-medium text-slate-600 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-200/60">
-                <i class="fas fa-list text-slate-400 text-[10px]"></i>
+            <div class="hidden sm:flex items-center gap-2.5 text-xs font-medium text-slate-600 bg-white/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-200/60 shadow-sm">
+                <i class="fas fa-th-large text-slate-400 text-[10px]"></i>
                 <span>{{ $garansis->count() }} ditampilkan</span>
             </div>
         </div>
 
-        {{-- Responsive Table --}}
-        <div class="overflow-x-auto">
-            {{--
-                NOTE: border-collapse is required here. Without it, a border-left
-                applied to individual <td> cells can render with visual gaps
-                between rows because the default table border model is
-                "separate" (cells have spacing around them).
-            --}}
-            <table class="w-full text-left text-sm border-collapse">
-                <thead class="bg-slate-50/60 text-[11px] uppercase tracking-wider text-slate-600 font-semibold border-b border-slate-100/50 sticky top-0">
-                    <tr>
-                        <th class="px-6 py-3 min-w-[170px]">Nama</th>
-                        <th class="px-6 py-3 min-w-[110px]">Invoice</th>
-                        <th class="px-6 py-3 min-w-[120px]">No HP</th>
-                        <th class="px-6 py-3 min-w-[170px]">Barang</th>
-                        <th class="px-6 py-3 min-w-[130px]">Lokasi</th>
-                        <th class="px-6 py-3 min-w-[100px]">Status</th>
-                        <th class="px-6 py-3 min-w-[120px]">Idle Time</th>
-                        <th class="px-6 py-3 min-w-[80px] text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100/50">
-                    @forelse($garansis as $garansi)
-                        @php
-                            $idleDays = $garansi->updated_at
-                                ->startOfDay()
-                                ->diffInDays(now()->startOfDay());
+        @if($garansis->count())
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" style="align-items: stretch;">
+                @foreach($garansis as $garansi)
+                    @php
+                        $idleDays = $garansi->updated_at
+                            ->startOfDay()
+                            ->diffInDays(now()->startOfDay());
 
-                            $belumSelesai = strtolower($garansi->status) !== 'selesai';
+                        $belumSelesai = strtolower($garansi->status) !== 'selesai';
 
-                            // Split into row background (safe on <tr>) and a
-                            // left border (must live on the first <td>,
-                            // because browsers do not reliably paint
-                            // left/right borders directly on <tr> elements —
-                            // that's why previously only the first row in the
-                            // whole table appeared to have a colored edge).
-                            $rowBg = '';
-                            $borderClass = '';
-                            $idleBadgeClass = 'bg-slate-100 text-slate-600';
+                        // SLA border color
+                        $slaBorder = 'border-l-slate-200';
+                        $slaBg     = '';
+                        $idleBadgeClass = 'bg-slate-100 text-slate-600';
 
-                            if ($belumSelesai) {
-                                if ($idleDays >= 2) {
-                                    $rowBg = 'bg-rose-50/20';
-                                    $borderClass = 'border-l-4 border-rose-500';
-                                    $idleBadgeClass = 'bg-rose-100 text-rose-700';
-                                } elseif ($idleDays >= 1) {
-                                    $rowBg = 'bg-amber-50/20';
-                                    $borderClass = 'border-l-4 border-amber-500';
-                                    $idleBadgeClass = 'bg-amber-100 text-amber-700';
-                                }
+                        if ($belumSelesai) {
+                            if ($idleDays >= 2) {
+                                $slaBorder = 'border-l-rose-500';
+                                $slaBg = 'bg-rose-50/30';
+                                $idleBadgeClass = 'bg-rose-100 text-rose-700';
+                            } elseif ($idleDays >= 1) {
+                                $slaBorder = 'border-l-amber-500';
+                                $slaBg = 'bg-amber-50/30';
+                                $idleBadgeClass = 'bg-amber-100 text-amber-700';
                             }
-                        @endphp
-                        <tr class="group hover:bg-slate-50 transition {{ $rowBg }}">
-                            {{-- Nama (carries the SLA left-border indicator) --}}
-                            <td class="px-6 py-3 font-semibold text-slate-950 {{ $borderClass }}">
-                                <div class="max-w-xs truncate">{{ $garansi->nama }}</div>
-                            </td>
+                        }
 
-                            {{-- Invoice --}}
-                            <td class="px-6 py-3 font-mono text-xs text-slate-500">
-                                {{ $garansi->invoice_pembelian ?? '-' }}
-                            </td>
+                        $slaBarColor = 'bg-slate-200';
+                        if ($belumSelesai) {
+                            if ($idleDays >= 2) $slaBarColor = 'bg-rose-500';
+                            elseif ($idleDays >= 1) $slaBarColor = 'bg-amber-500';
+                        } else {
+                            $slaBarColor = 'bg-emerald-500';
+                        }
+                    @endphp
+                    <div onclick="window.location='{{ route('garansi.show', $garansi) }}'"
+                       class="cursor-pointer group relative rounded-xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md hover:border-slate-300/60 transition-all duration-200 overflow-hidden {{ $slaBg }}"
+                       style="display: flex; flex-direction: column; min-height: 150px;">
 
-                            {{-- No HP --}}
-                            <td class="px-6 py-3 text-slate-700 text-sm font-medium">
-                                {{ $garansi->no_hp }}
-                            </td>
+                        {{-- SLA Left Bar Indicator --}}
+                        <div class="absolute left-0 top-0 bottom-0 w-1 {{ $slaBarColor }}" style="border-radius: 12px 0 0 12px;"></div>
 
-                            {{-- Barang --}}
-                            <td class="px-6 py-3 text-slate-700">
-                                @if($garansi->items->count() > 1)
-                                    <div class="max-w-xs truncate">
-                                        <span class="text-xs">{{ $garansi->items->first()->nama_barang }}</span>
-                                        <span class="text-xs text-slate-400 ml-1">+{{ $garansi->items->count() - 1 }}</span>
-                                    </div>
-                                @else
-                                    <div class="text-xs truncate">{{ $garansi->items->first()->nama_barang ?? '-' }}</div>
+                        {{-- Card Header: Nama + Status --}}
+                        <div class="pl-5 pr-4 pt-4 pb-2.5 flex items-start justify-between gap-2">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                                    {{ $garansi->nama }}
+                                </h3>
+                                <p class="mt-0.5 text-xs text-slate-500">
+                                    <i class="fas fa-phone text-[9px] mr-1"></i>{{ $garansi->no_hp }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                @if($belumSelesai && $idleDays > 0)
+                                    <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold {{ $idleBadgeClass }}">
+                                        <i class="fas fa-hourglass-half mr-0.5 text-[8px]"></i>
+                                        {{ $idleDays }}h
+                                    </span>
                                 @endif
-                            </td>
-
-                            {{-- Lokasi Chat --}}
-                            <td class="px-6 py-3">
-                                <span class="inline-flex items-center rounded-lg bg-slate-100/60 px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200/60">
-                                    {{ ucfirst($garansi->lokasi_chat) }}
-                                </span>
-                            </td>
-
-                            {{-- Status --}}
-                            <td class="px-6 py-3">
-                                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold {{ $garansi->status_color }}">
+                                <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold {{ $garansi->status_color }}">
                                     {{ ucfirst($garansi->status) }}
                                 </span>
-                            </td>
+                            </div>
+                        </div>
 
-                            {{-- Idle Time --}}
-                            <td class="px-6 py-3">
-                                @if($belumSelesai)
-                                    <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $idleBadgeClass }}">
-                                        <i class="fas fa-hourglass-half mr-1.5 text-[10px]"></i>
-                                        {{ $idleDays }} hari
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200/60">
-                                        <i class="fas fa-check-circle mr-1.5 text-[10px]"></i>
-                                        Selesai
-                                    </span>
-                                @endif
-                            </td>
-
-                            {{-- Aksi --}}
-                            <td class="px-6 py-3 text-right">
-                                <div class="inline-flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('garansi.show', $garansi) }}"
-                                       class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50/30 hover:border-blue-200/60 transition-all duration-200"
-                                       title="Lihat detail">
-                                        <i class="fas fa-eye text-xs"></i>
-                                    </a>
-
-                                    <a href="{{ route('garansi.edit', $garansi) }}"
-                                       class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 bg-white text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/30 hover:border-emerald-200/60 transition-all duration-200"
-                                       title="Edit data">
-                                        <i class="fas fa-edit text-xs"></i>
-                                    </a>
-
-                                    @if(auth()->user()->role === 'admin')
-                                        <form action="{{ route('garansi.destroy', $garansi) }}" method="POST" class="inline"
-                                              onsubmit="event.preventDefault(); confirmDelete(this, 'Data garansi {{ addslashes($garansi->nama) }} akan dihapus permanen. Lanjutkan?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 bg-white text-slate-500 hover:text-rose-600 hover:bg-rose-50/30 hover:border-rose-200/60 transition-all duration-200"
-                                                    title="Hapus data">
-                                                <i class="fas fa-trash text-xs"></i>
-                                            </button>
-                                        </form>
+                        {{-- Card Body: Info (grows to fill space) --}}
+                        <div class="pl-5 pr-4 pb-3 space-y-1.5" style="flex: 1;">
+                            {{-- Barang --}}
+                            @foreach($garansi->items->take(2) as $item)
+                                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                                    <i class="fas fa-box text-[8px] text-slate-300 flex-shrink-0"></i>
+                                    <span class="truncate">{{ $item->nama_barang }}</span>
+                                    @if($item->serial_number)
+                                        <span class="font-mono text-[10px] text-slate-400 flex-shrink-0">{{ Str::limit($item->serial_number, 12) }}</span>
                                     @endif
                                 </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-14 text-center">
-                                <div class="mx-auto max-w-md space-y-4">
-                                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100/60 text-slate-300">
-                                        <i class="fas fa-inbox text-2xl"></i>
-                                    </div>
-                                    <div class="space-y-1.5">
-                                        <h3 class="text-sm font-semibold text-slate-950">Tidak ada data ditemukan</h3>
-                                        <p class="text-sm text-slate-600">
-                                            @if(request('search') || request('status'))
-                                                Coba ubah kata kunci pencarian atau sesuaikan filter.
-                                            @else
-                                                Mulai dengan membuat data garansi baru.
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div class="flex justify-center gap-3">
-                                        @if(request('search') || request('status'))
-                                            <a href="{{ route('garansi.index') }}" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all duration-200">
-                                                <i class="fas fa-rotate-right text-xs"></i>
-                                                <span>Ulang Filter</span>
-                                            </a>
-                                        @endif
-                                        <a href="{{ route('garansi.create') }}" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all duration-200">
-                                            <i class="fas fa-plus text-xs"></i>
-                                            <span>Buat Baru</span>
-                                        </a>
-                                    </div>
+                            @endforeach
+                            @if($garansi->items->count() > 2)
+                                <span class="text-[10px] text-slate-400 pl-4">+{{ $garansi->items->count() - 2 }} lainnya</span>
+                            @endif
+
+                            {{-- Invoice --}}
+                            @if($garansi->invoice_pembelian)
+                                <div class="flex items-center gap-1.5 text-xs">
+                                    <i class="fas fa-receipt text-[8px] text-slate-300 flex-shrink-0"></i>
+                                    <span class="font-mono text-[10px] text-slate-500 truncate">{{ $garansi->invoice_pembelian }}</span>
                                 </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            @endif
+                        </div>
+
+                        {{-- Card Footer (always pinned to bottom) --}}
+                        <div class="pl-5 pr-3 py-2.5 border-t border-slate-100 flex items-center justify-between gap-2 bg-slate-50/40" style="margin-top: auto;">
+                            <div class="flex items-center gap-2 min-w-0 text-[10px] text-slate-400">
+                                <span class="inline-flex items-center gap-1 bg-white rounded px-1.5 py-0.5 border border-slate-200/60 text-slate-500 font-medium flex-shrink-0">
+                                    <i class="fas fa-map-marker-alt text-[7px]"></i>
+                                    {{ ucfirst($garansi->lokasi_chat) }}
+                                </span>
+                                <span class="truncate">
+                                    <i class="fas fa-clock text-[7px] mr-0.5"></i>
+                                    {{ $garansi->created_at->translatedFormat('d M Y') }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-0.5 flex-shrink-0" onclick="event.preventDefault(); event.stopPropagation();">
+                                <a href="{{ route('garansi.edit', $garansi) }}"
+                                   class="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+                                   title="Edit">
+                                    <i class="fas fa-edit text-[10px]"></i>
+                                </a>
+                                @if(auth()->user()->role === 'admin')
+                                    <form action="{{ route('garansi.destroy', $garansi) }}" method="POST" class="inline"
+                                          onsubmit="event.preventDefault(); event.stopPropagation(); confirmDelete(this, 'Data garansi {{ addslashes($garansi->nama) }} akan dihapus permanen. Lanjutkan?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                                                title="Hapus">
+                                            <i class="fas fa-trash text-[10px]"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                        </div>
+                @endforeach
+            </div>
+        @else
+            {{-- Empty State --}}
+            <div class="rounded-2xl border border-slate-200/40 bg-white shadow-sm px-6 py-14 text-center">
+                <div class="mx-auto max-w-md space-y-4">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100/60 text-slate-300">
+                        <i class="fas fa-inbox text-2xl"></i>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h3 class="text-sm font-semibold text-slate-950">Tidak ada data ditemukan</h3>
+                        <p class="text-sm text-slate-600">
+                            @if(request('search') || request('status'))
+                                Coba ubah kata kunci pencarian atau sesuaikan filter.
+                            @else
+                                Mulai dengan membuat data garansi baru.
+                            @endif
+                        </p>
+                    </div>
+                    <div class="flex justify-center gap-3">
+                        @if(request('search') || request('status'))
+                            <a href="{{ route('garansi.index') }}" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all duration-200">
+                                <i class="fas fa-rotate-right text-xs"></i>
+                                <span>Ulang Filter</span>
+                            </a>
+                        @endif
+                        <a href="{{ route('garansi.create') }}" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Buat Baru</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Pagination --}}
         @if($garansis->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100/50">
+            <div class="mt-5">
                 {{ $garansis->withQueryString()->links() }}
             </div>
         @endif

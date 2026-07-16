@@ -35,7 +35,7 @@ class GaransiController extends Controller
         $query->orderByRaw("CASE WHEN status = 'selesai' THEN 1 ELSE 0 END")
               ->orderBy('updated_at', 'asc');
 
-        $garansis = $query->paginate(10)->withQueryString();
+        $garansis = $query->paginate(20)->withQueryString();
 
         $statusList = [
             'pending',

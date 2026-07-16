@@ -319,12 +319,11 @@
             if (order.invoice_or_order_number) {
                 document.getElementById('invoice_pembelian').value = order.invoice_or_order_number;
             }
-            if (order.date_order) {
-                const dateOnly = order.date_order.split(' ')[0];
-                document.querySelector('input[name="tanggal_beli"]').value = dateOnly;
+            if (order.tanggal_beli) {
+                document.querySelector('input[name="tanggal_beli"]').value = order.tanggal_beli;
             }
-            if (order.marketplace_name) {
-                document.querySelector('input[name="nama_marketplace"]').value = order.marketplace_name;
+            if (order.nama_marketplace) {
+                document.querySelector('input[name="nama_marketplace"]').value = order.nama_marketplace;
             }
 
             // Auto fill items
