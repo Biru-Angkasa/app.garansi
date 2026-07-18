@@ -131,6 +131,15 @@ $statusText = match($garansi->status){
                 </span>
             </div>
 
+            @if($garansi->resi_pengiriman)
+            <div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Resi Pengiriman</div>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="font-mono font-semibold text-sm text-slate-800 bg-slate-100 px-2 py-1 rounded select-all">{{ $garansi->resi_pengiriman }}</span>
+                </div>
+            </div>
+            @endif
+
         </div>
 
     </div>

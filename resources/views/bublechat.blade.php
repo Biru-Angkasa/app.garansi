@@ -435,7 +435,16 @@ function floatingChats() {
 
         async fetchActive() {
             try {
-                const res = await fetch('{{ route('garansi.chat.active') }}');
+                const res = await fetch('{{ route('garansi.chat.active') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (res.status === 401) {
+                    window.location.reload();
+                    return;
+                }
                 this.chats = await res.json();
             } catch (e) {
                 console.log(e);
@@ -505,8 +514,17 @@ function floatingChats() {
             if (!this.activeChat) return;
             try {
                 const res = await fetch(
-                    `/garansi/${this.activeChat.id}/chat`
+                    `/garansi/${this.activeChat.id}/chat`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    }
                 );
+                if (res.status === 401) {
+                    window.location.reload();
+                    return;
+                }
                 this.messages = await res.json();
                 if (scroll) {
                     this.$nextTick(() => {

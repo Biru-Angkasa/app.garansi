@@ -1,17 +1,43 @@
 @php
 
-$steps = [
+$status = strtolower($garansi->status);
+$steps = [];
 
-    ['key' => 'pending', 'title' => 'Barang Diterima', 'desc' => 'Barang telah diterima oleh tim garansi.', 'icon' => 'fa-box-open'],
-    ['key' => 'repair', 'title' => 'Pemeriksaan / Repair', 'desc' => 'Teknisi sedang memeriksa atau memperbaiki produk.', 'icon' => 'fa-screwdriver-wrench'],
-    ['key' => 'replace', 'title' => 'Penggantian Unit', 'desc' => 'Barang sedang diproses untuk penggantian unit.', 'icon' => 'fa-arrows-rotate'],
-    ['key' => 'to distribution', 'title' => 'Distribusi', 'desc' => 'Barang telah selesai diproses dan siap dikirim.', 'icon' => 'fa-box'],
-    ['key' => 'pengiriman', 'title' => 'Pengiriman', 'desc' => 'Barang sedang menuju alamat pelanggan.', 'icon' => 'fa-truck-fast'],
-    ['key' => 'selesai', 'title' => 'Garansi Selesai', 'desc' => 'Proses garansi telah selesai.', 'icon' => 'fa-circle-check'],
+// 1. Tahap Awal
+$steps[] = ['key' => 'pending', 'title' => 'Barang Diterima', 'desc' => 'Barang telah diterima oleh tim garansi.', 'icon' => 'fa-box-open'];
 
-];
+// 2. Tahap Proses (Branching)
+if (in_array($status, ['repair', 'replace', 'to distribution'])) {
+    if ($status === 'repair') {
+        $steps[] = ['key' => 'repair', 'title' => 'Pemeriksaan / Repair', 'desc' => 'Teknisi sedang memeriksa atau memperbaiki produk.', 'icon' => 'fa-screwdriver-wrench'];
+    } elseif ($status === 'replace') {
+        $steps[] = ['key' => 'replace', 'title' => 'Penggantian Unit', 'desc' => 'Barang sedang diproses untuk penggantian unit.', 'icon' => 'fa-arrows-rotate'];
+    } elseif ($status === 'to distribution') {
+        $steps[] = ['key' => 'to distribution', 'title' => 'Distribusi', 'desc' => 'Barang telah diproses dan sedang dipersiapkan.', 'icon' => 'fa-box'];
+    }
+} elseif (in_array($status, ['pengiriman', 'selesai'])) {
+    // Jika sudah pengiriman/selesai, kita tebak dari history (SN baru)
+    $hasReplacement = $garansi->items->contains(fn($item) => !empty($item->serial_number_baru));
+    if ($hasReplacement) {
+        $steps[] = ['key' => 'replace', 'title' => 'Unit Diganti', 'desc' => 'Produk telah diganti dengan unit baru/lain.', 'icon' => 'fa-arrows-rotate'];
+    } else {
+        $steps[] = ['key' => 'repair', 'title' => 'Pemeriksaan / Repair Selesai', 'desc' => 'Proses pemeriksaan teknisi telah selesai.', 'icon' => 'fa-screwdriver-wrench'];
+    }
+}
 
-$current = collect($steps)->pluck('key')->search($garansi->status);
+// 3. Tahap Pengiriman
+$steps[] = ['key' => 'pengiriman', 'title' => 'Pengiriman', 'desc' => 'Barang sedang menuju alamat pelanggan.', 'icon' => 'fa-truck-fast'];
+
+// 4. Tahap Selesai
+$steps[] = ['key' => 'selesai', 'title' => 'Selesai', 'desc' => 'Proses klaim garansi telah selesai sepenuhnya.', 'icon' => 'fa-circle-check'];
+
+$current = collect($steps)->pluck('key')->search($status);
+// Jika status adalah to distribution, current mungkin tidak sinkron jika pengiriman/selesai, tapi search() aman.
+if ($current === false) {
+    if ($status === 'to distribution') {
+        $current = 1; // index dari processing step
+    }
+}
 
 @endphp
 

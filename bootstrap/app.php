@@ -20,4 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, Request $request) {
+            return redirect()->back()->withInput($request->except('_token'))->with('status', 'Sesi login Anda telah kedaluwarsa. Silakan muat ulang halaman dan coba lagi.');
+        });
     })->create();

@@ -30,6 +30,7 @@
             @forelse($garansis as $garansi)
             @include('tracking.components.info')
             @include('tracking.components.items')
+                @include('tracking.components.catatan')
                 <!-- @include('tracking.components.progress') -->
                 @include('tracking.components.timeline')
                 @include('tracking.components.note')
